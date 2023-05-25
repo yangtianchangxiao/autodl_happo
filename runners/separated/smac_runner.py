@@ -41,13 +41,13 @@ class SMACRunner(Runner):
 
                 for step in range(self.episode_length):
                     # Sample actions
-                    values, actions, action_log_probs, rnn_states, rnn_states_critic, soft_probs = self.collect(step)
+                    values, actions, action_log_probs, rnn_states, rnn_states_critic = self.collect(step)
                     # Obser reward and next obs
                     obs,  rewards, dones, infos, share_obs, rescue_masks = self.envs.step(actions)
                     # print("rewards", rewards)
                     data = obs, share_obs, rewards, dones, infos, \
                            values, actions, action_log_probs, \
-                           rnn_states, rnn_states_critic, soft_probs, rescue_masks
+                           rnn_states, rnn_states_critic, rescue_masks
 
                     # insert data into buffer
                     self.insert(data)
@@ -166,7 +166,7 @@ class SMACRunner(Runner):
             self.buffer[agent_id].obs[0] = obs[:,agent_id].copy()
 
     @torch.no_grad()
-    def collect(self, step, soft_probs = None):
+    def collect(self, step):
         value_collector=[]
         action_collector=[]
         action_log_prob_collector=[]
@@ -205,13 +205,12 @@ class SMACRunner(Runner):
         action_log_probs = np.array(action_log_prob_collector).transpose(1, 0, 2)
         rnn_states = np.array(rnn_state_collector).transpose(1, 0, 2, 3)
         rnn_states_critic = np.array(rnn_state_critic_collector).transpose(1, 0, 2, 3)
-        soft_probs = np.array(soft_prob_collector).transpose(1, 0, 2)
 
-        return values, actions, action_log_probs, rnn_states, rnn_states_critic, soft_probs
+        return values, actions, action_log_probs, rnn_states, rnn_states_critic
 
     def insert(self, data):
         obs, share_obs, rewards, dones, infos, \
-        values, actions, action_log_probs, rnn_states, rnn_states_critic, soft_probs, rescue_mask = data
+        values, actions, action_log_probs, rnn_states, rnn_states_critic, rescue_mask = data
         # print("actions is", actions)
         dones_env = np.array(dones)
         # dones_env = np.all(dones, axis=1)
@@ -235,7 +234,7 @@ class SMACRunner(Runner):
         for agent_id in range(self.num_agents):
             self.buffer[agent_id].insert(share_obs[:,agent_id], obs[:,agent_id], rnn_states[:,agent_id],
                     rnn_states_critic[:,agent_id],actions[:,agent_id], action_log_probs[:, agent_id],
-                    values[:,agent_id], rewards[:,agent_id], masks[:,agent_id], soft_probs[:, agent_id], rescue_mask[:, agent_id])
+                    values[:,agent_id], rewards[:,agent_id], masks[:,agent_id], rescue_mask[:, agent_id])
 
     def average_rewards(self):
         total_rewards = 0

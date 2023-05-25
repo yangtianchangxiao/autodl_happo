@@ -44,10 +44,10 @@ class HAPPO():
             self.value_normalizer = PopArt(1, device=self.device)
         else:
             self.value_normalizer = None
-            
         self.batch_expand_times = args.batch_expand_times
         error_message = f"{self.num_mini_batch} should be greater than {self.batch_expand_times}"
-        assert self.num_mini_batch > self.batch_expand_times, error_message
+        assert self.num_mini_batch >= self.batch_expand_times, error_message
+
     def cal_value_loss(self, values, value_preds_batch, return_batch, active_masks_batch):
         """
         Calculate value function loss.
@@ -103,7 +103,8 @@ class HAPPO():
         """
         share_obs_batch, obs_batch, rnn_states_batch, rnn_states_critic_batch, actions_batch, \
         value_preds_batch, return_batch, masks_batch, active_masks_batch, old_action_log_probs_batch, \
-        adv_targ, available_actions_batch, factor_batch, soft_probs_batch, rescue_masks_batch = sample
+        adv_targ, available_actions_batch, factor_batch, rescue_masks_batch = sample
+
 
 
         old_action_log_probs_batch = check(old_action_log_probs_batch).to(**self.tpdv)
@@ -119,7 +120,7 @@ class HAPPO():
         factor_batch = check(factor_batch).to(**self.tpdv)
         # Reshape to do in a single forward pass for all steps
         # 增加一个 intervention_mask, 当 mask 的某个元素是 0 时，loss 是 behavior clone loss; 当该元素是 1 时，loss 是 happo 的 loss
-        values, action_log_probs, dist_entropy = self.policy.evaluate_actions(share_obs_batch,
+        values, action_log_probs, dist_entropy, soft_probs_batch = self.policy.evaluate_actions(share_obs_batch,
                                                                               obs_batch, 
                                                                               rnn_states_batch, 
                                                                               rnn_states_critic_batch, 
@@ -132,12 +133,14 @@ class HAPPO():
 
         surr1 = imp_weights * adv_targ
         surr2 = torch.clamp(imp_weights, 1.0 - self.clip_param, 1.0 + self.clip_param) * adv_targ
-
-        # 原本 rescue masks里由-1 -2 -3 -4， 和 1，1表示用的是policy的action，其余的表示用的是rescue 的action
+        # print("surr1: ",surr1, "surr2", surr2)
+        # 原本 rescue masks 里由-1 -2 -3 -4， 和 1，1表示用的是policy的action，其余的表示用的是rescue 的action
         # 所以我们先把所有的负数变成 0， 然后得到纯policy部分的 error
-        # policy_masks = np.clip(rescue_masks_batch, 0, None)
+        policy_masks = np.clip(rescue_masks_batch, 0, None)
         if self._use_policy_active_masks:
-            # policy_action_loss = (-torch.sum(policy_masks * factor_batch * torch.min(surr1, surr2),
+            policy_masks_tensor = torch.tensor(policy_masks, dtype=torch.float32, device=factor_batch.device)
+
+            # policy_action_loss = (-torch.sum(policy_masks_tensor * factor_batch * torch.min(surr1, surr2),
             policy_action_loss = (-torch.sum(factor_batch * torch.min(surr1, surr2),
                                              dim=-1,
                                              keepdim=True) * active_masks_batch).sum() / active_masks_batch.sum()
@@ -145,19 +148,24 @@ class HAPPO():
             policy_action_loss = -torch.sum(factor_batch * torch.min(surr1, surr2), dim=-1, keepdim=True).mean()
 
 
-        #
-        # modified_masks = np.clip(-rescue_masks_batch, 0, None)
-        # non_zero_indices = np.nonzero(modified_masks)[0]
+
+        modified_masks = np.clip(-rescue_masks_batch, 0, None)
+        non_zero_indices = np.nonzero(modified_masks)[0]
+        intervention_loss = torch.sum(soft_probs_batch[non_zero_indices, modified_masks[non_zero_indices]- 1])
         # intervention_loss = sum(soft_probs_batch[idx + modified_masks[idx] - 1] for idx in non_zero_indices)
 
         # 但是需要注意下，interbention_loss是否有梯度？
+        
+        # print("policy_loss is ", policy_action_loss, " and intervention_loss is ", intervention_loss)
         # policy_loss = policy_action_loss + intervention_loss
         policy_loss = policy_action_loss
         if self.batch_expand_times > 1:
             policy_loss = policy_loss / self.batch_expand_times
         if update_actor:
             (policy_loss - dist_entropy * self.entropy_coef).backward()
-         # 当样本拓展一定倍数后，更新actor
+
+
+        # 当样本拓展一定倍数后，更新actor
         if sample_time % self.batch_expand_times ==0 or sample_time == self.num_mini_batch:
             if self._use_max_grad_norm:
                 actor_grad_norm = nn.utils.clip_grad_norm_(self.policy.actor.parameters(), self.max_grad_norm)
@@ -165,12 +173,12 @@ class HAPPO():
                 actor_grad_norm = get_gard_norm(self.policy.actor.parameters())
             self.policy.actor_optimizer.step()
             self.policy.actor_optimizer.zero_grad()
-            
-            
+
         value_loss = self.cal_value_loss(values, value_preds_batch, return_batch, active_masks_batch)
         if self.batch_expand_times > 1:
             ((value_loss * self.value_loss_coef)/ self.batch_expand_times).backward()
-         # 当样本拓展一定倍数后，更新critic
+        
+        # 当样本拓展一定倍数后，更新critic
         if sample_time % self.batch_expand_times ==0 or sample_time == self.num_mini_batch:
             if self._use_max_grad_norm:
                 critic_grad_norm = nn.utils.clip_grad_norm_(self.policy.critic.parameters(), self.max_grad_norm)
@@ -219,6 +227,8 @@ class HAPPO():
                 data_generator = buffer.feed_forward_generator(advantages, self.num_mini_batch)
 
             for sample_time, sample in enumerate(data_generator):
+                # value_loss, critic_grad_norm, policy_loss, dist_entropy, actor_grad_norm, imp_weights = self.ppo_update(sample, update_actor=update_actor)
+                # sample_time 从1开始计数，这样可以避免一开始sample_time % batch_expand_time ==0
                 self.ppo_update(sample, sample_time+1, update_actor=update_actor)
 
                 # train_info['value_loss'] += value_loss.item()

@@ -50,7 +50,6 @@ class SeparatedReplayBuffer(object):
         act_shape = get_shape_from_act_space(act_space)
 
         self.actions = np.zeros((self.episode_length, self.n_rollout_threads, act_shape), dtype=np.float32)
-        self.soft_probs = np.zeros((self.episode_length, self.n_rollout_threads, 4))
         self.rescue_masks = np.ones((self.episode_length, self.n_rollout_threads, 1))
         self.action_log_probs = np.zeros((self.episode_length, self.n_rollout_threads, act_shape), dtype=np.float32)
         self.rewards = np.zeros((self.episode_length, self.n_rollout_threads, 1), dtype=np.float32)
@@ -67,15 +66,14 @@ class SeparatedReplayBuffer(object):
         self.factor = factor.copy()
 
     def insert(self, share_obs, obs, rnn_states, rnn_states_critic, actions, action_log_probs,
-               value_preds, rewards, masks, soft_probs=None, rescue_masks=None, bad_masks=None, active_masks=None, available_actions=None):
+               value_preds, rewards, masks, rescue_masks=None, bad_masks=None, active_masks=None, available_actions=None):
         # print("self.share_obs reward", self.share_obs[self.step + 1 ].shape, share_obs.shape)
         self.share_obs[self.step + 1] = share_obs.copy().reshape(20, -1)
         self.obs[self.step + 1] = obs.copy()
         self.rnn_states[self.step + 1] = None
         self.rnn_states_critic[self.step + 1] = None
         self.actions[self.step] = actions.copy()
-        # self.soft_probs[self.step] = soft_probs.copy() # 20,4
-        # self.rescue_masks[self.step] = rescue_masks.copy().reshape(20, -1) # 原本的 size 是（20，），改为 （20，1）
+        self.rescue_masks[self.step] = rescue_masks.copy().reshape(20, -1) # 原本的 size 是（20，），改为 （20，1）
         self.action_log_probs[self.step] = action_log_probs.copy()
         self.value_preds[self.step] = value_preds.copy()
         # print("rewards shape is", self.rewards[self.step].shape, rewards.shape)
@@ -176,7 +174,7 @@ class SeparatedReplayBuffer(object):
                 for step in reversed(range(self.rewards.shape[0])):
                     self.returns[step] = self.returns[step + 1] * self.gamma * self.masks[step + 1] + self.rewards[step]
 
-    def feed_forward_generator(self, advantages,  num_mini_batch=None, mini_batch_size=None, soft_probs_batch = None, rescue_masks_batch = None,):
+    def feed_forward_generator(self, advantages,  num_mini_batch=None, mini_batch_size=None, rescue_masks_batch = None,):
         episode_length, n_rollout_threads = self.rewards.shape[0:2]
         batch_size = n_rollout_threads * episode_length
 
@@ -197,8 +195,7 @@ class SeparatedReplayBuffer(object):
         rnn_states = self.rnn_states[:-1].reshape(-1, *self.rnn_states.shape[2:])
         rnn_states_critic = self.rnn_states_critic[:-1].reshape(-1, *self.rnn_states_critic.shape[2:])
         actions = self.actions.reshape(-1, self.actions.shape[-1])
-        # soft_probs = self.soft_probs.reshape(-1, self.soft_probs.shape[-1])
-        # rescue_masks = self.rescue_masks.reshape(-1, self.rescue_masks.shape[-1])
+        rescue_masks = self.rescue_masks.reshape(-1, self.rescue_masks.shape[-1])
         if self.available_actions is not None:
             available_actions = self.available_actions[:-1].reshape(-1, self.available_actions.shape[-1])
         value_preds = self.value_preds[:-1].reshape(-1, 1)
@@ -218,8 +215,7 @@ class SeparatedReplayBuffer(object):
             rnn_states_batch = rnn_states[indices]
             rnn_states_critic_batch = rnn_states_critic[indices]
             actions_batch = actions[indices]
-            # soft_probs_batch = soft_probs[indices]
-            # rescue_masks_batch = rescue_masks[indices]
+            rescue_masks_batch = rescue_masks[indices]
             if self.available_actions is not None:
                 available_actions_batch = available_actions[indices]
             else:
@@ -238,7 +234,7 @@ class SeparatedReplayBuffer(object):
                 yield share_obs_batch, obs_batch, rnn_states_batch, rnn_states_critic_batch, actions_batch, value_preds_batch, return_batch, masks_batch, active_masks_batch, old_action_log_probs_batch, adv_targ, available_actions_batch
             else:
                 factor_batch = factor[indices]
-                yield share_obs_batch, obs_batch, rnn_states_batch, rnn_states_critic_batch, actions_batch, value_preds_batch, return_batch, masks_batch, active_masks_batch, old_action_log_probs_batch, adv_targ, available_actions_batch, factor_batch, soft_probs_batch, rescue_masks_batch
+                yield share_obs_batch, obs_batch, rnn_states_batch, rnn_states_critic_batch, actions_batch, value_preds_batch, return_batch, masks_batch, active_masks_batch, old_action_log_probs_batch, adv_targ, available_actions_batch, factor_batch, rescue_masks_batch
 
     def naive_recurrent_generator(self, advantages, num_mini_batch):
         n_rollout_threads = self.rewards.shape[1]

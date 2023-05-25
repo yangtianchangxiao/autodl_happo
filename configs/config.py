@@ -230,10 +230,10 @@ def get_config():
 
     # Mixer Layer parameters
     parser.add_argument("--patch_size", type=int, default=5, help="Patch_size")
-    parser.add_argument("--in_channels", type = int, default=3, help="The channel of map")
+    parser.add_argument("--in_channels", type = int, default=4, help="The channel of map")
     parser.add_argument("--hidden_dim", type=int, default = 8, help="embed channel used in Conv network")
     parser.add_argument("--transpose_time", type=int, default=2, help='The time of transpose applied in model')
-
+    parser.add_argument("--stride", type=int, default=1, help="strid data in convo  lution")
     # recurrent parameters
     parser.add_argument("--use_naive_recurrent_policy", action='store_true',
                         default=False, help='Whether to use a naive recurrent policy')

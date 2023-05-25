@@ -164,7 +164,7 @@ class ACTLayer(nn.Module):
             else:
                 dist_entropy = action_logits.entropy().mean()
         
-        return action_log_probs, dist_entropy
+        return action_log_probs, dist_entropy, soft_probs
 
     def evaluate_actions_trpo(self, x, action, available_actions=None, active_masks=None):
         """

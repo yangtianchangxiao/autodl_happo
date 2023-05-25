@@ -265,10 +265,11 @@ class SearchGrid(gym.Env):
         # if self.MC_iter == self.target_occur_iter:
         #     print("explored acreage", explored_acreage)
         #     print("self.free_acreage", self.free_acreage)
+            print("过0.8, map is", self.random_index)
             self.human_num = 6
             self.human_num_temp = 6
             self.human_num_copy = 6
-            self.generate_human = False
+            self.generate_human = True
             explored_area = np.argwhere(self.joint_map[1] > 0)
             
             # erase the old whole map[1]
@@ -1092,7 +1093,7 @@ class SearchGrid(gym.Env):
     def init_param(self):
         self.MC_iter = 0
         self.target_occur_iter = 100
-        self.run_time = 10 # Run run_time steps per game 当不禁止碰撞的时候，我用的参数是1000
+        self.run_time = 75 # 10 25 40 45 55 65 75 Run run_time steps per game 当不禁止碰撞的时候，我用的参数是1000
         self.map_size = 60
         self.drone_num = 2
         # Rescue paragrams
@@ -1120,7 +1121,7 @@ class SearchGrid(gym.Env):
         self.human_init_pos = []
         # 一开始不生成目标点，探索范围过了阈值之后再生成
         self.generate_human = False
-        self.generate_threshold = 0.8
+        self.generate_threshold = 0.86
         self.human_num = 0
         self.human_num_temp = self.human_num
         self.human_num_copy = self.human_num

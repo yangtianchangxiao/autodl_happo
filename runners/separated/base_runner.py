@@ -84,21 +84,21 @@ class Runner(object):
                         share_observation_space,
                         self.envs.action_space[agent_id],
                         device = self.device)
-            # checkpoint_actor = torch.load(self.log_dir_address + '/actor_agent' + str(agent_id) + '.pt')
-            # checkpoint_critic = torch.load(self.log_dir_address + '/critic_agent' + str(agent_id) + '.pt')
-            # checkpoint_actor_optimizer = torch.load(self.log_dir_address + 'actor_optimizer' + str(agent_id) + '.pt')
-            # checkpoint_critic_optimizer = torch.load(self.log_dir_address + 'critic_optimizer' + str(agent_id) + '.pt')
-            # po.actor.load_state_dict(checkpoint_actor)
-            # po.critic.load_state_dict(checkpoint_critic)
-            # lr_path = self.all_args.lr_path
-            # critic_lr_path = self.all_args.critic_lr_path
-            # # with open(lr_path, "r") as f:
-            # #     po.lr = float(f.read().strip())
-            # # with open(critic_lr_path, "r") as f:
-            # #     po.critic_lr = float(f.read().strip())
-            #
-            # po.actor_optimizer.load_state_dict(checkpoint_actor_optimizer)
-            # po.critic_optimizer.load_state_dict(checkpoint_critic_optimizer)
+            checkpoint_actor = torch.load(self.log_dir_address + '/actor_agent' + str(agent_id) + '.pt')
+            checkpoint_critic = torch.load(self.log_dir_address + '/critic_agent' + str(agent_id) + '.pt')
+            checkpoint_actor_optimizer = torch.load(self.log_dir_address + 'actor_optimizer' + str(agent_id) + '.pt')
+            checkpoint_critic_optimizer = torch.load(self.log_dir_address + 'critic_optimizer' + str(agent_id) + '.pt')
+            po.actor.load_state_dict(checkpoint_actor)
+            po.critic.load_state_dict(checkpoint_critic)
+            lr_path = self.all_args.lr_path
+            critic_lr_path = self.all_args.critic_lr_path
+            # with open(lr_path, "r") as f:
+            #     po.lr = float(f.read().strip())
+            # with open(critic_lr_path, "r") as f:
+            #     po.critic_lr = float(f.read().strip())
+            
+            po.actor_optimizer.load_state_dict(checkpoint_actor_optimizer)
+            po.critic_optimizer.load_state_dict(checkpoint_critic_optimizer)
 
             self.policy.append(po)
 
@@ -162,7 +162,7 @@ class Runner(object):
                                                             available_actions,
                                                             self.buffer[agent_id].active_masks[:-1].reshape(-1, *self.buffer[agent_id].active_masks.shape[2:]))
             else:
-                old_actions_logprob, _ =self.trainer[agent_id].policy.actor.evaluate_actions(self.buffer[agent_id].obs[:-1].reshape(-1, *self.buffer[agent_id].obs.shape[2:]),
+                old_actions_logprob, _ ,_=self.trainer[agent_id].policy.actor.evaluate_actions(self.buffer[agent_id].obs[:-1].reshape(-1, *self.buffer[agent_id].obs.shape[2:]),
                                                             self.buffer[agent_id].rnn_states[0:1].reshape(-1, *self.buffer[agent_id].rnn_states.shape[2:]),
                                                             self.buffer[agent_id].actions.reshape(-1, *self.buffer[agent_id].actions.shape[2:]),
                                                             self.buffer[agent_id].masks[:-1].reshape(-1, *self.buffer[agent_id].masks.shape[2:]),
@@ -178,7 +178,7 @@ class Runner(object):
                                                             available_actions,
                                                             self.buffer[agent_id].active_masks[:-1].reshape(-1, *self.buffer[agent_id].active_masks.shape[2:]))
             else:
-                new_actions_logprob, _ =self.trainer[agent_id].policy.actor.evaluate_actions(self.buffer[agent_id].obs[:-1].reshape(-1, *self.buffer[agent_id].obs.shape[2:]),
+                new_actions_logprob, _ , _=self.trainer[agent_id].policy.actor.evaluate_actions(self.buffer[agent_id].obs[:-1].reshape(-1, *self.buffer[agent_id].obs.shape[2:]),
                                                             self.buffer[agent_id].rnn_states[0:1].reshape(-1, *self.buffer[agent_id].rnn_states.shape[2:]),
                                                             self.buffer[agent_id].actions.reshape(-1, *self.buffer[agent_id].actions.shape[2:]),
                                                             self.buffer[agent_id].masks[:-1].reshape(-1, *self.buffer[agent_id].masks.shape[2:]),

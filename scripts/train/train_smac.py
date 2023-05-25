@@ -80,8 +80,8 @@ def parse_args(args, parser):
     parser.add_argument("--add_center_xy", action='store_true', default=False)
     parser.add_argument("--use_single_network", action='store_true', default=False)
     parser.add_argument('--num_agents', type=int, default=2, help="number of players")
-    parser.add_argument('--lr_path', type=str, default="/home/happo/configs/learning_rate"+str(save_count)+".txt") # 13用的是不带数字的
-    parser.add_argument('--critic_lr_path', type=str, default="/home/happo/configs/critic_learning_rate"+str(save_count) +".txt") # 同上
+    parser.add_argument('--lr_path', type=str, default="/home/cx/configs/learning_rate"+str(save_count)+".txt") # 13用的是不带数字的
+    parser.add_argument('--critic_lr_path', type=str, default="/home/cx/configs/critic_learning_rate"+str(save_count) +".txt") # 同上
 
     all_args = parser.parse_known_args(args)[0]
 

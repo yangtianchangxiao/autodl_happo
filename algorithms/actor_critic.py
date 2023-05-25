@@ -112,13 +112,13 @@ class Actor(nn.Module):
 
             return action_log_probs, dist_entropy, action_mu, action_std, all_probs
         else:
-            action_log_probs, dist_entropy = self.act.evaluate_actions(actor_features,
+            action_log_probs, dist_entropy, soft_probs = self.act.evaluate_actions(actor_features,
                                                                     action, available_actions,
                                                                     active_masks=
                                                                     active_masks if self._use_policy_active_masks
                                                                     else None)
 
-            return action_log_probs, dist_entropy
+            return action_log_probs, dist_entropy, soft_probs
 
 
 class Critic(nn.Module):
