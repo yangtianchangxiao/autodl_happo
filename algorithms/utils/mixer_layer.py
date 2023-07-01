@@ -95,8 +95,8 @@ class PatchEmbedding(nn.Module):
         # 默认是 3*3 的卷积核，strid=1
         # (60-3)/1 = 58
         # self.proj = nn.Conv2d(in_channels, embed_dim, kernel_size=patch_size, stride=stride_data)
-        self.proj3 = nn.Conv2d(3, embed_dim, kernel_size=patch_size, stride=patch_size)
-        self.proj4 = nn.Conv2d(4, embed_dim, kernel_size=patch_size, stride=patch_size)
+        # self.proj3 = nn.Conv2d(3, embed_dim, kernel_size=patch_size, stride=patch_size)
+        # self.proj4 = nn.Conv2d(4, embed_dim, kernel_size=patch_size, stride=patch_size)
         self.proj1 = nn.Conv2d(in_channels=1, out_channels=8, kernel_size=3, stride=1)
         self.proj8 = nn.Conv2d(in_channels=8, out_channels=32, kernel_size=5, stride=2)
 

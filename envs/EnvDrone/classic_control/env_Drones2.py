@@ -19,11 +19,15 @@ import sys
 sys.path.append(r"/home/cx/happo/envs/EnvDrone/classic_control/")
 sys.path.append(r"d:\code/TRPO-in-MARL\envs\EnvDrone\classic_control/")
 sys.path.append(r"/home/cx/envs/EnvDrone/classic_control/")
+sys.path.append(r"/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/")
 
 
 
 from rescue_function import rescue_action
 from rescue_function import generate_path
+from PIL import Image
+
+
 
 # from gym.envs.classic_control import utils
 
@@ -57,6 +61,18 @@ class Drones(object):
         # 周围环境的空旷程度，可以用来表示避免碰撞的难度
         self.open_degree = 0
         # self.coord_per_obs_length = 0 # 记录agent一次探索的空白区域的坐标有几个
+        self.repetition_flag = True
+        self.repetition_count = 0
+        self.find_grid_count = 0
+        # 这个变量表示，智能体做出的action是否有助于帮助自己逃离稀疏奖励的困境
+        # 如果是True，表示这个action是有助于逃离稀疏奖励的困境的
+        # 如果是False，表示这个action是没有助于逃离稀疏奖励的困境的
+        # 如果是None，表示现在没有在稀疏奖励的困境中
+        self.rescue_path_reduce_flag = None
+        self.communicate_update_flag = False
+        # 有时候因为障碍物生成的不好，智能体会处在一个被障碍物包围的局面，这个时候就需要重开
+        self.surrounded_flag = False
+
 
 class Human(object):
     def __init__(self, pos):
@@ -214,37 +230,57 @@ class SearchGrid(gym.Env):
     def step(self, action):
         self.MC_iter = self.MC_iter + 1
         
+        explored_acreage = np.count_nonzero(self.joint_map[1])
+        self.exploration_prop = explored_acreage /self.free_acreage
         
         # 救援模块
         # 1 表示该 step 没有使用 rescue， 0 表示该 step 使用了 rescue
         rescue_mask = np.ones(self.drone_num)
         # 计算当前地图探索的百分比
+        explored_acreage = np.count_nonzero(self.joint_map[1])
+        self.exploration_prop = explored_acreage /self.free_acreage
+        
+        # 分别记录两个agent没有探索出新地方的次数
+        for i in range(self.drone_num):
+            self.grid_agents[i] = self.average_list_true[i]
+        for i in range(self.drone_num):
+            if self.grid_agents[i] <= 0:
+                # print("agent", i, "repetition", self.agent_repetition[i])
+                self.agent_repetition[i] = self.agent_repetition[i] + 1
+                self.agent_repetition_reward[i] = self.agent_repetition_reward[i] + 1
+            else:
+                # print("agent", i, "self.grid_agents[i]", self.grid_agents[i])
+                self.agent_repetition[i] = 0
+                self.agent_repetition_reward[i] = 0
+        self.last_grid_agents = self.grid_agents.copy()
+        
         if self.exploration_prop <= self.generate_threshold:
-            explored_acreage = np.count_nonzero(self.joint_map[1])
-            self.exploration_prop = explored_acreage /self.free_acreage
 
-            for i in range(self.drone_num):
-                self.grid_agents[i] = self.average_list_true[i]
-                # 分别记录两个agent没有探索出新地方的次数
-            for i in range(self.drone_num):
-                if self.grid_agents[i] <= 0:
-                    self.agent_repetition[i] = self.agent_repetition[i] + 1
-                else:
-                    self.agent_repetition[i] = 0
-            self.last_grid_agents = self.grid_agents.copy()
             # 重复的阈值应当和探索面积的百分比有关, 但是先不管
             for i, repetition in enumerate(self.agent_repetition):
-                if repetition > self.reputation_threshold:
+                if repetition > self.repetition_threshold \
+                    and self.drone_list[i].whole_map[1, self.drone_list[i].pos[0], self.drone_list[i].pos[1]]:
                     # 下面这一行就是rescue algorithm
                     # print("start rescue")
-                    # self.rescue_action_list[i].actions, x, y = generate_path(env=self, id=i, free_zone = self.free_map_rescue, obstacle_map = self.joint_map[2])
+                    self.rescue_action_list[i].actions, self.goal_r[i], self.goal_c[i] = generate_path(env=self, id=i, free_zone = self.free_map_rescue, obstacle_map = self.joint_map[2])
                     self.rescue_action_list[i].id = i
                     self.agent_repetition[i] = -10000
+                    # print("初始rescue")
                     # print("len(self.rescue_action_list[i].actions) ", len(self.rescue_action_list[i].actions) )
 
+            
             for i in range(self.drone_num):
-                
                 if len(self.rescue_action_list[i].actions) > 0:
+                    # 判断目标点是否已经被探索过了
+                    if all((self.drone_list[i].whole_map[1, self.goal_r[i], self.goal_c[i]] + self.drone_list[i].whole_map[3, self.goal_r[i], self.goal_c[i]]) > 0 for i in range(self.drone_num)) \
+                        and self.drone_list[i].whole_map[1, self.drone_list[i].pos[0], self.drone_list[i].pos[1]] >0:
+                        if self.rescue_target_keep_time_count < 1:
+                            self.rescue_action_list[i].actions, self.goal_r[i], self.goal_c[i] = generate_path(env=self, id=i, free_zone = self.free_map_rescue, obstacle_map = self.joint_map[2])
+                            self.rescue_action_list[i].id = i
+                            self.agent_repetition[i] = -10000
+                            # print("中间发现rescue的目标点已经被探索过了")
+                            self.rescue_target_keep_time_count = self.rescue_target_keep_time
+                        self.rescue_target_keep_time_count = self.rescue_target_keep_time_count - 1
                     # 取首个元素，然后删除，直到所有的元素全部删除，此时即到达A star 的目的地
                     # 当 rescue_mask 的某个 element 为 1 时, 代表该 index 的 drone 需要使用 rescue 的动作, 来代替 policy 网络产生的 action
                     one_hot = self.rescue_action_list[i].actions.pop(0)
@@ -265,13 +301,15 @@ class SearchGrid(gym.Env):
         # if self.MC_iter == self.target_occur_iter:
         #     print("explored acreage", explored_acreage)
         #     print("self.free_acreage", self.free_acreage)
-            print("过0.8, map is", self.random_index)
+            # print("过0.8, map is", self.random_index)
             self.human_num = 6
             self.human_num_temp = 6
             self.human_num_copy = 6
             self.generate_human = True
             explored_area = np.argwhere(self.joint_map[1] > 0)
-            
+            # 清零重复探索的记录
+            for i in range(self.drone_num):
+                self.agent_repetition[i] = 0
             # erase the old whole map[1]
             self.joint_map[1] = np.zeros((self.map_size, self.map_size))
             for i_drone in range(self.drone_num):
@@ -438,13 +476,36 @@ class SearchGrid(gym.Env):
                 direction = np.argmax(action)  # 获取机器人要移动的方向
             # print("the direction is ", direction)
 
+            # 如果智能体陷入了周围都是被探索的区域的困境，那么我们就要判断当前动作是否有助于帮助智能体脱离困境·
+            # 判断标准是：如果当前动作的执行，会使得智能体脱离困境的总路程减少，那么我们就将rescue_path_reduce_flag设置为True
+            # 我们在state_action_reward那个函数中，当rescue_path_reduce_flag为True时，就会给予智能体一个奖励，之后将rescue_path_reduce_flag设置为False
+          
+            
             temp_pos = self.drone_list[k].pos + delta[direction]  # 根据方向更新机器人的位置
+            
+            
             # 禁止撞击
             if self.land_mark_map[temp_pos[0], temp_pos[1]] > 0:
                 self.collision[k] = 1
+                # self.drone_list[k].pos = temp_pos # 有这个就不禁止撞击了
             else:
+                if self.drone_list[k].whole_map[1, self.drone_list[k].pos[0], self.drone_list[k].pos[1]] > 0:
+                    if self.drone_list[k].repetition_count > self.repetition_threshold_for_reward:
+                        try:
+                            action_list, goal_r, goal_c = generate_path(env=self, id=k, free_zone = self.free_map_rescue, obstacle_map = self.joint_map[2], pos = self.drone_list[k].pos)
+                            current_rescue_path_length =  len(action_list)
+                            action_list, goal_r, goal_c = generate_path(env=self, id=k, free_zone = self.free_map_rescue, obstacle_map = self.joint_map[2], pos = temp_pos)
+                            if len(action_list) < current_rescue_path_length:
+                                self.drone_list[k].rescue_path_reduce_flag = True
+                                # print("好动作")
+                            else:
+                                self.drone_list[k].rescue_path_reduce_flag = False
+                        except:
+                            print("被障碍物包围了")
+                            self.drone_list[k].surrounded_flag = True
                 self.drone_list[k].pos = temp_pos
                 self.collision[k] = 0
+                   
 
             # 不禁止撞击
             # self.drone_list[k].pos = temp_pos
@@ -556,6 +617,8 @@ class SearchGrid(gym.Env):
         # 在观测范围内进行信息更新，更新时间戳地图1，轨迹地图2和障碍物地图3
         # 禁止通信
         drone.whole_map[2] = 0
+        drone.communicate_list = []
+
         for k in range(self.drone_num):
             if self.drone_list[k].id != drone.id and (self.drone_list[k].pos[0] - drone.pos[0]) ** 2 \
                     + (self.drone_list[k].pos[1] - drone.pos[1]) ** 2 <= sensing_size ** 2:
@@ -572,7 +635,6 @@ class SearchGrid(gym.Env):
         if drone.communicate_list:
             # Combine maps from all drones, including the current one
             maps = np.array([self.drone_list[i].whole_map for i in drone.communicate_list] + [drone.whole_map])
-
             # Compute the maximum values for channels 1, 2, and 3
             max_channels = np.max(maps[:, [1, 2, 3], :, :], axis=0)
 
@@ -731,6 +793,8 @@ class SearchGrid(gym.Env):
         count = np.sum(np.all(obs == [1, 1, 1], axis=-1))
         drone.open_degree = count/obs_size/obs_size
 
+        # 计算新找的了多少个区域
+        drone.find_grid_count = 0
         for i in range(obs_size):
             for j in range(obs_size):
                 x = i + drone.pos[0] - drone.view_range + 1
@@ -739,13 +803,30 @@ class SearchGrid(gym.Env):
                 # print("obs i j", obs[i, j])
                 if np.array_equal(obs[i, j], [1, 1, 1]):
                     # 观测到了新区域，新区域的值被赋为1，新值与旧值的差就是这一个step的information gain
+                    
+                    # If find new area, then the repetation_flag is set to False.
+                    if drone.whole_map[1, x, y] == 0:
+                        drone.repetition_flag =  False
+                        drone.find_grid_count = drone.find_grid_count + 1
                     drone.open_information_gain = drone.open_information_gain + 1 - drone.whole_map[1, x, y]
                     drone.whole_map[1, x, y] = 1
                     # print("droe.coord_per_obs shape",drone.coord_per_obs.shape)
                     drone.coord_per_obs[coord_per_obs_length] = (x, y)
                     coord_per_obs_length = coord_per_obs_length + 1
+        
+        # If not find new area
+        if drone.repetition_flag is True:
+            drone.repetition_count = drone.repetition_count + 1
+            # print("drone id", drone.id,"repetition_count", drone.repetition_count)
+        else:
+            drone.repetition_count = 0
+        
 
-
+        
+        drone.repetition_flag = True
+        
+            
+            
         # 进行轨迹的衰减, 是上面那段注释的优化
         # drone.whole_map[2, :, :] -= 1 / self.t_u
         # drone.whole_map[2, drone.whole_map[2, :, :] < 1 / self.t_u] = 0
@@ -775,6 +856,7 @@ class SearchGrid(gym.Env):
         # 打乱智能体的决策顺序，随机抽取智能体来决策
         allowed_values = list(range(self.drone_num))
         k_list = random.sample(allowed_values, self.drone_num)
+        # print("开始获得联合观测")
         for k in k_list:
             self.drone_list[k].individual_observed_obs = 0
             temp = self.get_drone_obs(self.drone_list[k])
@@ -833,7 +915,24 @@ class SearchGrid(gym.Env):
 
         # 合并所有无人机的整个地图
         for drone in self.drone_list:
+            drone.communicate_update_flag = False
+        for drone in self.drone_list:
             self.joint_map[0, drone.pos[0], drone.pos[1]] = 5
+            # 如果无人机的通信列表不为空，且无人机的通信更新标志位为False
+            # 则将所有通信列表中的无人机的地图全部弄相同
+            # 引入通信更新标志位的原因是，如果一个无人机的地图已经更新过了，就不需要再更新了
+            if drone.communicate_list and drone.communicate_update_flag == False:
+                maps = np.array([self.drone_list[i].whole_map for i in drone.communicate_list] + [drone.whole_map])
+
+                # Compute the maximum values for channels 1, 2, and 3
+                max_channels = np.max(maps[:, [1, 2, 3], :, :], axis=0)
+
+                drone.whole_map[[1, 2, 3], :, :] = max_channels
+                drone.communicate_update_flag = True
+                for drone_id in drone.communicate_list:
+                    self.drone_list[drone_id].whole_map[[1, 2, 3], :, :] = max_channels
+                    self.drone_list[drone_id].communicate_update_flag = True
+
         # self.joint_map[0, :, :] = np.maximum(0,  self.joint_map[0, :, :] - 0.01)
         # self.joint_map[0] = np.max([drone.whole_map[0] for drone in self.drone_list], axis=0)
         self.joint_map[1] = np.max([drone.whole_map[1] for drone in self.drone_list], axis=0)
@@ -845,15 +944,15 @@ class SearchGrid(gym.Env):
         # reward = 0  # 合作任务，只设置单一奖励
         # reward_list = np.zeros(self.drone_num, dtype=np.float32)
         ####################设置奖励的增益
-        target_factor = 10
+        target_factor = 0
         # 发现障碍物的奖励系数
         information_gain = 0
         # time step factor 变成 0, 取消时间惩罚
         # 时间惩罚
-        time_step_factor = 0.1
+        time_step_factor = 0.8 # 从0.1升到0.3 优化一下轨迹
         # 发现新区域的奖励系数
         average_time_stamp_factor = 4 # 当禁止碰撞时，是4；不禁止碰撞时，是10
-
+        time_stamp_update_gain = 4
         collision_factor = 30
         collision_decay = 0
         # 单步内，智能体探索区域重复的惩罚系数
@@ -921,15 +1020,18 @@ class SearchGrid(gym.Env):
         for i, single_map in enumerate(single_map_set):
             # print("np.sum(single_map[1])",np.sum(single_map[1]))
             # print("非零数数量",np.count_nonzero(single_map[1]))
-            self.find_grid_count[i] = np.count_nonzero(single_map[1])
+            # self.find_grid_count[i] = np.count_nonzero(single_map[1])
             # average_list[i] = np.sum(single_map[1]) / self.map_size ** 2
             # print("self.find_grid_count[i] and self.last_find_grid_cout[i]", self.find_grid_count[i], self.last_find_grid_cout[i])
-            self.average_list_true[i] = self.average_list[i] = max(self.find_grid_count[i] - self.last_find_grid_cout[i] \
-                                    - self.drone_list[i].grid_communication , 0)
+            # self.average_list_true[i] = self.average_list[i] = max(self.find_grid_count[i] - self.last_find_grid_cout[i] \
+            #                         - self.drone_list[i].grid_communication , 0)
+
+            self.average_list_true[i] = self.average_list[i] = self.drone_list[i].find_grid_count
+
 
             # print("average_list", i, "is", self.average_list[i])
             # print("agent",i,"new area reward", self.average_list[i] * average_time_stamp_factor)
-            self.last_find_grid_cout[i] = self.find_grid_count[i]
+            # self.last_find_grid_cout[i] = self.find_grid_count[i]
             # print("drone open information gain", self.drone_list[i].open_information_gain)
         # 如果存在lazy agent，那么将不能得到奖励
         # if any(i == 0 for i in self.average_list):
@@ -937,7 +1039,18 @@ class SearchGrid(gym.Env):
         # print("new area reward",np.arraybd(self.average_list) * average_time_stamp_factor)
 
         reward_list = [x + y * average_time_stamp_factor for x, y in zip(reward_list, self.average_list)]
-        # reward_list = [x + y.open_information_gain * average_time_stamp_factor for x, y in zip(reward_list, self.drone_list)]
+        for i, drone in enumerate(self.drone_list):
+            if drone.rescue_path_reduce_flag is True:
+                # print("Start guide: ", "agent", i, "repetition", drone.repetition_count, 'Mc_iter', self.MC_iter)   
+                # print("timestamp gain is", self.drone_list[i].open_information_gain * time_stamp_update_gain )
+                # print("origin reward is ", reward_list[i])
+                # reward_list[i] = reward_list[i] +  self.drone_list[i].open_information_gain * time_stamp_update_gain 
+                reward_list[i] = reward_list[i] +  time_stamp_update_gain 
+            if drone.rescue_path_reduce_flag is False:
+                reward_list[i] = reward_list[i] -  5*time_stamp_update_gain
+                
+            drone.rescue_path_reduce_flag = None
+                # print("该动作有利于脱困")
         # print("reward_list new area", reward_list)
 
         # 单步内探索区域重叠的惩罚：
@@ -969,7 +1082,7 @@ class SearchGrid(gym.Env):
             # reward_list = list(map(lambda x: x + 500, reward_list))
             done = True
             print("Map index is", self.random_index)
-            with open ("/home/cx/envs/EnvDrone/classic_control/map_index8.txt","w") as w:
+            with open ("/home/cx/envs/EnvDrone/classic_control/map_index8.txt","a") as w:
                 w.write(str(self.random_index)+"\n")
             # info['0'] = "find all target"
 
@@ -990,20 +1103,22 @@ class SearchGrid(gym.Env):
                 # print("obstacle collison")
                 # reward_list[drone.id] -= (collision_factor - min(collision_decay, self.MC_iter))* max(drone.open_degree, 0.6)
                 reward_list[drone.id] -= (collision_factor - min(collision_decay, self.MC_iter))
+            if self.drone_list[i].surrounded_flag is True:
+                done = True
         # 时间用尽但是还没有完成任务的惩罚
         if self.time_stamp > self.run_time:  # 超时
             done = True
             # reward_list = list(map(lambda x: x - 100, reward_list))
             # print("Time out!")
             # info['0'] = "exceed run time"
-
+        
         if done is True or self.time_stamp > self.run_time:
             # print("self.human_num_copy-self.human_num", target_found_num)
             # if self.MC_iter > 300:
             #     print("self.MC iter", self.MC_iter)
             #     print("env num is", self.random_index)
-            if target_found_num > 0:
-                print("Find targets: ", target_found_num)
+            # if target_found_num > 0:
+            #     print("Find targets: ", target_found_num)
             self.reset()
 
         if self.rescue_flag is True:
@@ -1093,12 +1208,24 @@ class SearchGrid(gym.Env):
     def init_param(self):
         self.MC_iter = 0
         self.target_occur_iter = 100
-        self.run_time = 75 # 10 25 40 45 55 65 75 Run run_time steps per game 当不禁止碰撞的时候，我用的参数是1000
+        self.run_time = 10 # 10 25 40 45 55 65 75 100 110 140 200 Run run_time steps per game 当不禁止碰撞的时候，我用的参数是1000
         self.map_size = 60
         self.drone_num = 2
         # Rescue paragrams
+        # 已探索区域的比例
         self.exploration_prop = 0
+        # rescue 的动作列表
         self.rescue_action_list = []
+        # 当发现rescue的目标点被其他智能体探索后，就重新生成目标点
+        # 新生成的目标点有一定的“保质期”， 在这段时间内后，如果目标点及时被其他智能体探索了，我们也暂时不切换目标点
+        # 这样做的好处是，可以避免频繁的切换目标点，导致智能体的运动不稳定
+        self.rescue_target_keep_time = 2
+        self.rescue_target_keep_time_count = self.rescue_target_keep_time
+        # rescue找到的目标点的位置，agent使用广度优先搜索来找到目标点，会移动到搜索序列的最后一个点，也就是紧挨着目标点的点
+        # 初始化目标点的位置，在不触发rescue的情况下，目标点的位置是不会被使用的
+        self.goal_r = [0 for i in range(self.drone_num)]
+        self.goal_c = [0 for i in range(self.drone_num)]
+        # 在每个时间步，每个agent独自探索的网格数
         self.grid_agents = []
         for i in range(self.drone_num):
             # id starts from 0.
@@ -1106,7 +1233,9 @@ class SearchGrid(gym.Env):
             self.grid_agents.append(0)
         self.last_grid_agents = np.zeros(self.drone_num)
         self.agent_repetition = np.zeros(self.drone_num)
-        self.reputation_threshold = 15 # 基础款MIXER里用的是5
+        self.agent_repetition_reward = np.zeros(self.drone_num)
+        self.repetition_threshold = 10000 # 基础款MIXER里用的是5
+        self.repetition_threshold_for_reward = 3 # 用于指导智能体从死胡同等不好的地方出来
         self.rescue_flag = False
         # The area explored by each agent each step
         self.average_list = [0] * self.drone_num
@@ -1121,7 +1250,7 @@ class SearchGrid(gym.Env):
         self.human_init_pos = []
         # 一开始不生成目标点，探索范围过了阈值之后再生成
         self.generate_human = False
-        self.generate_threshold = 0.86
+        self.generate_threshold = 0.9
         self.human_num = 0
         self.human_num_temp = self.human_num
         self.human_num_copy = self.human_num
@@ -1153,20 +1282,15 @@ class SearchGrid(gym.Env):
         self.view_range_2 = view_range_2
         self.collision = np.zeros(self.drone_num) # 记录which drone take an action that will cause collision
         self.random_index = np.random.randint(0, self.map_num)
-        # self.random_index = 206
-        # self.random_index = 208
-        # print("random index", self.random_index)
+        self.erosion_prob = 0.5
         self.choose_map = self.map_set[self.random_index]
-        # print("random_index", random_index)
         # 使用 NumPy 切片，隔一个采样一个
         self.choose_map = self.choose_map[::2, ::2]
-        # # Randomly flip the map horizontally (left-right)
-        # if random.choice([True, False]):
-        #     self.choose_map = np.flip(self.choose_map, axis=1)
-        # # Randomly flip the map vertically (up-down)
-        # if random.choice([True, False]):
-        #     self.choose_map = np.flip(self.choose_map, axis=0)
+        # self.choose_map = self.get_Map()
+        if np.random.rand() >self.erosion_prob:
+            self.choose_map = self.erode_and_add_obstacles(map=self.choose_map, erosion_probability=0.3, obstacle_probability=0.02, erosion_times=2)
 
+      
         # 生成一个随机整数（0 或 1）
         rand_num = np.random.randint(0, 2)
 
@@ -1178,7 +1302,7 @@ class SearchGrid(gym.Env):
         rand_num = np.random.randint(0, 4)
 
         # 使用随机数作为旋转次数（每次沿顺时针方向旋转90°）
-        choose_map = np.rot90(self.choose_map, k=-rand_num)
+        # choose_map = np.rot90(self.choose_map, k=-rand_num)
         wall = np.argwhere(self.choose_map == 0)  # 获取障碍物的坐标
         self.free_zones = np.argwhere(self.choose_map == 1)  # 获取空白区域的坐标
         self.free_acreage = len(self.free_zones)
@@ -1266,4 +1390,115 @@ class SearchGrid(gym.Env):
                 temp_human = Human(temp_pos[i])
                 self.human_init_pos.append(temp_pos[i].copy())
                 self.human_list.append(temp_human)
+                
+                
+                
+
+    def load_pgm_map(self, file_path):
+        # 使用PIL库打开PGM文件
+        image = Image.open(file_path)
+
+        # 转换为灰度图像模式
+        image = image.convert("L")
+
+        # 获取图像的宽度和高度
+        width, height = image.size
+
+        # 创建一个二维列表来表示栅格地图
+        grid_map = [[0] * width for _ in range(height)]
+
+        # 遍历图像的每个像素，将像素值映射到栅格地图中
+        for y in range(height):
+            for x in range(width):
+                pixel_value = image.getpixel((x, y))
+                # 假设PGM图像中较亮的像素代表障碍物，将其标记为1，其他像素标记为0
+                if pixel_value > 210:
+                    grid_map[y][x] = 1
+
+        grid_map = np.array(grid_map)
+
+        return grid_map
+
+
+    def downsample_map(self,grid_map, shape, downsample_factor):
+        height, width = shape[0], shape[1]
+
+        # Calculate new map dimensions
+        new_height = height // downsample_factor
+        new_width = width // downsample_factor
+        print(f'new_height:{new_height}, new_width:{new_width}!')
+
+        # Create new map
+        downsampled_map = np.zeros((new_height, new_width))
+
+        # Traverse the new map
+        for i in range(new_height):
+            for j in range(new_width):
+                # Calculate the value of each grid in the new map
+                    downsampled_map[i, j] = np.min(grid_map[i*downsample_factor : min((i+1)*downsample_factor, height), j*downsample_factor : min((j+1)*downsample_factor, width)])
+
+        print(f'downsampled_map shape:{downsampled_map.shape}!')
+        return downsampled_map
+
+
+    def get_Map(self):
+        grid_map = self.load_pgm_map('test.pgm')
+
+        # Create downsampled map
+        downsampled_map = self.downsample_map(grid_map, grid_map.shape, 4)
+
+        downsampled_map = downsampled_map[10:45, 0:50]
+
+        desired_shape = (60, 60)
+
+        # Compute the padding widths
+        pad_width_y = desired_shape[0] - downsampled_map.shape[0]
+        pad_width_x = desired_shape[1] - downsampled_map.shape[1]
+
+        # Generate random padding widths for each side
+        np.random.seed(0)  # you can set the seed to make the random numbers reproducible
+        random_pad_y1 = np.random.randint(0, pad_width_y + 1)
+        random_pad_y2 = pad_width_y - random_pad_y1
+        random_pad_x1 = np.random.randint(0, pad_width_x + 1)
+        random_pad_x2 = pad_width_x - random_pad_x1
+
+        # Compute the padding for each dimension
+        pad_width = ((random_pad_y1, random_pad_y2), (random_pad_x1, random_pad_x2))
+
+        # Apply the padding
+        expanded_map = np.pad(downsampled_map, pad_width, mode='constant', constant_values=0)
+
+        return expanded_map
+    
+    
+    def erode_and_add_obstacles(self, map, erosion_probability=0.3, obstacle_probability=0.1, erosion_times=2):
+        map_width, map_height = map.shape
+
+        # Define the area of interest
+        start_x, end_x, start_y, end_y = 5, 55, 5, 55
+
+        # Randomly add obstacles within the area of interest
+        mask = np.random.rand(map_width, map_height) < obstacle_probability
+        mask[:start_x, :] = mask[end_x:, :] = mask[:, :start_y] = mask[:, end_y:] = False
+        map = np.where(mask & (map == 1), 0, map)
+
+        for _ in range(erosion_times):
+            # Create boolean masks for the map borders and obstacles within the area of interest
+            top_mask = (map[start_x:end_x-1, start_y:end_y] == 0) & (map[start_x+1:end_x, start_y:end_y] == 1)
+            bottom_mask = (map[start_x+1:end_x, start_y:end_y] == 0) & (map[start_x:end_x-1, start_y:end_y] == 1)
+            left_mask = (map[start_x:end_x, start_y:end_y-1] == 0) & (map[start_x:end_x, start_y+1:end_y] == 1)
+            right_mask = (map[start_x:end_x, start_y+1:end_y] == 0) & (map[start_x:end_x, start_y:end_y-1] == 1)
+
+            # Combine all border cells into a single boolean mask
+            border_mask = np.zeros_like(map, dtype=bool)
+            border_mask[start_x:end_x-1, start_y:end_y][top_mask] = True
+            border_mask[start_x+1:end_x, start_y:end_y][bottom_mask] = True
+            border_mask[start_x:end_x, start_y:end_y-1][left_mask] = True
+            border_mask[start_x:end_x, start_y+1:end_y][right_mask] = True
+
+            # Erode border cells with a given probability
+            erosion_mask = (np.random.rand(map_width, map_height) < erosion_probability) & border_mask
+            map[erosion_mask] = 1
+
+        return map
 

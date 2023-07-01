@@ -7,7 +7,7 @@ import torch
 from tensorboardX import SummaryWriter
 from utils.separated_buffer import SeparatedReplayBuffer
 from utils.util import update_linear_schedule
-
+import gc 
 def _t2n(x):
     return x.detach().cpu().numpy()
 
@@ -76,6 +76,7 @@ class Runner(object):
         print("action_space: ", self.envs.action_space)
 
         self.policy = []
+        # print("num_agents: ", self.num_agents)
         for agent_id in range(self.num_agents):
             share_observation_space = self.envs.share_observation_space[agent_id] if self.use_centralized_V else self.envs.observation_space[agent_id]
             # policy network
@@ -84,21 +85,21 @@ class Runner(object):
                         share_observation_space,
                         self.envs.action_space[agent_id],
                         device = self.device)
-            checkpoint_actor = torch.load(self.log_dir_address + '/actor_agent' + str(agent_id) + '.pt')
-            checkpoint_critic = torch.load(self.log_dir_address + '/critic_agent' + str(agent_id) + '.pt')
-            checkpoint_actor_optimizer = torch.load(self.log_dir_address + 'actor_optimizer' + str(agent_id) + '.pt')
-            checkpoint_critic_optimizer = torch.load(self.log_dir_address + 'critic_optimizer' + str(agent_id) + '.pt')
-            po.actor.load_state_dict(checkpoint_actor)
-            po.critic.load_state_dict(checkpoint_critic)
-            lr_path = self.all_args.lr_path
-            critic_lr_path = self.all_args.critic_lr_path
-            # with open(lr_path, "r") as f:
-            #     po.lr = float(f.read().strip())
-            # with open(critic_lr_path, "r") as f:
-            #     po.critic_lr = float(f.read().strip())
+            # checkpoint_actor = torch.load(self.log_dir_address + '/actor_agent' + str(agent_id) + '.pt')
+            # checkpoint_critic = torch.load(self.log_dir_address + '/critic_agent' + str(agent_id) + '.pt')
+            # checkpoint_actor_optimizer = torch.load(self.log_dir_address + 'actor_optimizer' + str(agent_id) + '.pt')
+            # checkpoint_critic_optimizer = torch.load(self.log_dir_address + 'critic_optimizer' + str(agent_id) + '.pt')
+            # po.actor.load_state_dict(checkpoint_actor)
+            # po.critic.load_state_dict(checkpoint_critic)
+            # lr_path = self.all_args.lr_path
+            # critic_lr_path = self.all_args.critic_lr_path
+                # with open(lr_path, "r") as f:
+                #     po.lr = float(f.read().strip())
+                # with open(critic_lr_path, "r") as f:
+                #     po.critic_lr = float(f.read().strip())
             
-            po.actor_optimizer.load_state_dict(checkpoint_actor_optimizer)
-            po.critic_optimizer.load_state_dict(checkpoint_critic_optimizer)
+            # po.actor_optimizer.load_state_dict(checkpoint_actor_optimizer)
+            # po.critic_optimizer.load_state_dict(checkpoint_critic_optimizer)
 
             self.policy.append(po)
 
@@ -188,6 +189,7 @@ class Runner(object):
                 factor = factor*_t2n(torch.prod(torch.exp(new_actions_logprob-old_actions_logprob),dim=-1).reshape(self.episode_length,self.n_rollout_threads,1))
             train_infos.append(train_info)      
             self.buffer[agent_id].after_update()
+                        
 
         return train_infos
 

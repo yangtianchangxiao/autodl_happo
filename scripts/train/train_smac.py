@@ -19,7 +19,7 @@ from envs.env_wrappers_multiprocess import MultiDummyVecEnv
 from runners.separated.smac_runner import SMACRunner as Runner
 from envs.env_discrete import DiscreteActionEnv
 import pickle
-save_count = 17
+save_count = 18
 cuda_device = "cuda:0"
 """Train script for SMAC."""
 
@@ -35,7 +35,7 @@ def make_train_env(all_args, map_set, map_num):
             else:
                 print("Can not support the " + all_args.env_name + "environment.")
                 raise NotImplementedError
-            env.seed(all_args.seed + rank * 1000)
+            # env.seed(all_args.seed + rank * 1000)
             return env
 
         return init_env
@@ -132,7 +132,7 @@ def main(args):
     # seed
     torch.manual_seed(3407)
     torch.cuda.manual_seed_all(all_args.seed)
-    np.random.seed(all_args.seed)
+    # np.random.seed(all_args.seed)
 
     # env
     train_path = os.path.join('/home/cx', 'light_mappo/envs', 'resize_scale_120', 'train_data.pickle')

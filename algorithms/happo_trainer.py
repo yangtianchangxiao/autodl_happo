@@ -47,7 +47,7 @@ class HAPPO():
         self.batch_expand_times = args.batch_expand_times
         error_message = f"{self.num_mini_batch} should be greater than {self.batch_expand_times}"
         assert self.num_mini_batch >= self.batch_expand_times, error_message
-
+        
     def cal_value_loss(self, values, value_preds_batch, return_batch, active_masks_batch):
         """
         Calculate value function loss.
@@ -149,15 +149,15 @@ class HAPPO():
 
 
 
-        modified_masks = np.clip(-rescue_masks_batch, 0, None)
-        non_zero_indices = np.nonzero(modified_masks)[0]
-        intervention_loss = torch.sum(soft_probs_batch[non_zero_indices, modified_masks[non_zero_indices]- 1])
+        # modified_masks = np.clip(-rescue_masks_batch, 0, None)
+        # non_zero_indices = np.nonzero(modified_masks)[0]
+        # intervention_loss = torch.sum(soft_probs_batch[non_zero_indices, modified_masks[non_zero_indices]- 1])
         # intervention_loss = sum(soft_probs_batch[idx + modified_masks[idx] - 1] for idx in non_zero_indices)
 
         # 但是需要注意下，interbention_loss是否有梯度？
         
         # print("policy_loss is ", policy_action_loss, " and intervention_loss is ", intervention_loss)
-        # policy_loss = policy_action_loss + intervention_loss
+        # policy_loss = policy_action_loss + 0.00001*intervention_loss
         policy_loss = policy_action_loss
         if self.batch_expand_times > 1:
             policy_loss = policy_loss / self.batch_expand_times
@@ -210,14 +210,14 @@ class HAPPO():
         advantages = (advantages - mean_advantages) / (std_advantages + 1e-5)
 
         train_info = {}
-
+        time = 0
         # train_info['value_loss'] = 0
         # train_info['policy_loss'] = 0
         # train_info['dist_entropy'] = 0
         # train_info['actor_grad_norm'] = 0
         # train_info['critic_grad_norm'] = 0
         # train_info['ratio'] = 0
-
+        
         for _ in range(self.ppo_epoch):
             if self._use_recurrent_policy:
                 data_generator = buffer.recurrent_generator(advantages, self.num_mini_batch, self.data_chunk_length)
@@ -230,19 +230,17 @@ class HAPPO():
                 # value_loss, critic_grad_norm, policy_loss, dist_entropy, actor_grad_norm, imp_weights = self.ppo_update(sample, update_actor=update_actor)
                 # sample_time 从1开始计数，这样可以避免一开始sample_time % batch_expand_time ==0
                 self.ppo_update(sample, sample_time+1, update_actor=update_actor)
-
-                # train_info['value_loss'] += value_loss.item()
-                # train_info['policy_loss'] += policy_loss.item()
-                # train_info['dist_entropy'] += dist_entropy.item()
-                # train_info['actor_grad_norm'] += actor_grad_norm
-                # train_info['critic_grad_norm'] += critic_grad_norm
-                # train_info['ratio'] += imp_weights.mean()
-
+                # 显示显存使用情况
+                # print('Current GPU memory usage:')
+                # print('Allocated:', round(torch.cuda.memory_allocated(0)/1024**3,1), 'GB')
+                # print('Reserved: ', round(torch.cuda.memory_reserved(0)/1024**3,1), 'GB')
+                # time = time + 1 
+                # print("time is ", time)
         num_updates = self.ppo_epoch * self.num_mini_batch
-
+        
         for k in train_info.keys():
             train_info[k] /= num_updates
- 
+            
         return train_info
 
     def prep_training(self):

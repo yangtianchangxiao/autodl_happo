@@ -6,6 +6,7 @@ from algorithms.utils.mlp import MLPBase
 from algorithms.utils.rnn import RNNLayer
 from algorithms.utils.act import ACTLayer
 from algorithms.utils.mixer_layer import MixerBase
+from algorithms.utils.resnet18 import Resnet18
 from utils.util import get_shape_from_obs_space
 
 
@@ -36,6 +37,8 @@ class Actor(nn.Module):
             print("MLPBase")
         elif args.nn_type == 'mixer':
             base = MixerBase
+        elif args.nn_type == 'resnet18':
+            base = Resnet18
         self.base = base(args, obs_shape)
 
         if self._use_naive_recurrent_policy or self._use_recurrent_policy:
@@ -143,6 +146,8 @@ class Critic(nn.Module):
             base =  MLPBase
         elif args.nn_type == 'mixer':
             base = MixerBase
+        elif args.nn_type == 'resnet18':
+            base = Resnet18
         self.base = base(args, cent_obs_shape)
 
         if self._use_naive_recurrent_policy or self._use_recurrent_policy:

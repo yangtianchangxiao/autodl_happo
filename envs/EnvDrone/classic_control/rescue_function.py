@@ -19,8 +19,9 @@ def find_nearest_frontier(map, start):
     visited.add(start)
     last_final_point = None  # 初始化 last_final_point
 
-    # if map[start[0], start[1]] ==0:
-    #     print("起始点有问题")
+    if map[start[0], start[1]] ==0:
+        print("起始点有问题")
+
     while not queue.empty():
         distance, (r, c) = queue.get()
         if map[r, c] == 0:
@@ -29,7 +30,7 @@ def find_nearest_frontier(map, start):
             # np.count_nonzero(map)
             # if last_final_point is None:
             #     print("last final point 有问题")
-            return last_final_point
+            return last_final_point, r, c
         # for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (1, 1), (-1, 1), (1, -1)]:
         for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
             nr, nc = r + dr, c + dc
@@ -42,17 +43,24 @@ def find_nearest_frontier(map, start):
             if map[nr, nc] <= 1:
                 queue.put((distance + 1, (nr, nc)))
                 visited.add((nr, nc))
+    # import numpy as np
+
+    np.set_printoptions(threshold=np.inf)  # Set the print threshold to infinity
+    map[start[0], start[1]] = 100
+    print(map)
     print("None!!!!!!!!!!!!!!!!!!!1！")
     return None
 
-def generate_path(env, id, free_zone, obstacle_map):
+def generate_path(env, id, free_zone, obstacle_map, pos = None):
     start_pos = env.drone_list[id].pos
+    if pos is not None:
+        start_pos = pos
     # 开始规划路径，第一步找到这个agent的地图里所有的边界点，为此，我们需要一份同时包含障碍物和已探索区域的地图
     # 此时，map中 value>=2 的点就是障碍物，0<value<=1的点就是已经搜索的区域
     map = env.drone_list[id].whole_map[1] + 2 * env.drone_list[id].whole_map[3]
     # 接下来，我需要找到所有的边界点，其特点为，周围的八个临界点里至少有两个的 value 为 0
     # print("map start point", env.drone_list[id].whole_map[1][start_pos[0]][start_pos[1]])
-    frontier_point = find_nearest_frontier(map, start_pos)
+    frontier_point, goal_r, goal_c = find_nearest_frontier(map, start_pos)
 
     # plt.show()
     # time.sleep(10)
@@ -67,10 +75,10 @@ def generate_path(env, id, free_zone, obstacle_map):
     # 然后 ax1.plot(y, x) 会在 ax1 上画出这条路径。
     # print("path is", path)
 
-    x, y = zip(*path)
+    # x, y = zip(*path)
     # ax1.plot(y, x, c='r', lw=2)
     # print("action list", action_list)
-    return action_list, x, y
+    return action_list, goal_r, goal_c
 
 def rescue_path(map, obstacle_map, target_x, target_y, start_x, start_y):
     astar = rescue.AStar(obstacle_map=obstacle_map, map=map, target_x=target_x, target_y=target_y, start_x=start_x,

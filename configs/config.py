@@ -196,7 +196,7 @@ def get_config():
 
     # network parameters
     parser.add_argument("--nn_type", type=str,
-                        default='mlp', choices=["mlp", "cnn", "mixer"])
+                        default='mlp', choices=["mlp", "cnn", "mixer", 'resnet18'])
 
     parser.add_argument("--add_dropout", action='store_true', default=False,
                         help="If True, dropout layers will be added in the mlp model, you can see it in algorithms/utils/mlp")
@@ -246,9 +246,13 @@ def get_config():
     
     # optimizer parameters
     parser.add_argument("--lr", type=float, 
-                        default=5e-4, help='learning rate (default: 5e-4)')
+                        default=5e-5, help='learning rate (default: 5e-4)')
+    parser.add_argument("--lr_resnet", type=float,
+                        default=5e-5, help='learning rate for resnet (default: 5e-5)')
+    parser.add_argument("--lr_others", type=float,default= 5e-4, help='learning rate for other networks (default: 5e-4)')
+    
     parser.add_argument("--critic_lr", type=float, 
-                        default=5e-4, help='critic learning rate (default: 5e-4)')
+                        default=5e-5, help='critic learning rate (default: 5e-4)')
     parser.add_argument("--opti_eps", type=float, 
                         default=1e-5, help='RMSprop optimizer epsilon (default: 1e-5)')
     parser.add_argument("--weight_decay", type=float, default=0)

@@ -33,12 +33,15 @@ class SMACRunner(Runner):
         target_find_list = []
         with SummaryWriter(log_dir=self.log_dir_address, comment='Target found') as w:
             last_episode = 0
+            indices = np.arange(self.num_agents)
             for episode in range(episodes):
                 self.reset_count = 0
                 self.reset_count2 = 0
                 if self.use_linear_lr_decay:
                     self.trainer.policy.lr_decay(episode, episodes)
-
+                # np.random.shuffle(indices)
+                # print("这次的policy顺序是", indices)
+                # self.trainer = [self.trainer[i] for i in indices]
                 for step in range(self.episode_length):
                     # Sample actions
                     values, actions, action_log_probs, rnn_states, rnn_states_critic = self.collect(step)
