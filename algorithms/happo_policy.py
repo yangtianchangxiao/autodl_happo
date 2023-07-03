@@ -42,6 +42,10 @@ class HAPPO_Policy:
                                                  lr=self.critic_lr,
                                                  eps=self.opti_eps,
                                                  weight_decay=self.weight_decay)
+        
+        # self.actor_optimizer = torch.optim.SGD(self.actor.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        # self.critic_optimizer = torch.optim.SGD(self.critic.parameters(), lr=self.critic_lr, weight_decay=self.weight_decay)
+
 
     def lr_decay(self, episode, episodes):
         """

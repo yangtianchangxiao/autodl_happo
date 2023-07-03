@@ -46,7 +46,9 @@ class HAPPO():
             self.value_normalizer = None
         self.batch_expand_times = args.batch_expand_times
         error_message = f"{self.num_mini_batch} should be greater than {self.batch_expand_times}"
-        assert self.num_mini_batch >= self.batch_expand_times, error_message
+        # assert self.num_mini_batch >= self.batch_expand_times, error_message
+        
+        self.train_times = 1
         
     def cal_value_loss(self, values, value_preds_batch, return_batch, active_masks_batch):
         """
@@ -105,7 +107,7 @@ class HAPPO():
         value_preds_batch, return_batch, masks_batch, active_masks_batch, old_action_log_probs_batch, \
         adv_targ, available_actions_batch, factor_batch, rescue_masks_batch = sample
 
-
+        
 
         old_action_log_probs_batch = check(old_action_log_probs_batch).to(**self.tpdv)
         adv_targ = check(adv_targ).to(**self.tpdv)
@@ -166,7 +168,9 @@ class HAPPO():
 
 
         # 当样本拓展一定倍数后，更新actor
-        if sample_time % self.batch_expand_times ==0 or sample_time == self.num_mini_batch:
+        
+        # if sample_time % self.batch_expand_times ==0 or sample_time == self.num_mini_batch:
+        if self.train_times % self.batch_expand_times ==0:
             if self._use_max_grad_norm:
                 actor_grad_norm = nn.utils.clip_grad_norm_(self.policy.actor.parameters(), self.max_grad_norm)
             else:
@@ -179,7 +183,8 @@ class HAPPO():
             ((value_loss * self.value_loss_coef)/ self.batch_expand_times).backward()
         
         # 当样本拓展一定倍数后，更新critic
-        if sample_time % self.batch_expand_times ==0 or sample_time == self.num_mini_batch:
+        # if sample_time % self.batch_expand_times ==0 or sample_time == self.num_mini_batch:
+        if self.train_times % self.batch_expand_times == 0:
             if self._use_max_grad_norm:
                 critic_grad_norm = nn.utils.clip_grad_norm_(self.policy.critic.parameters(), self.max_grad_norm)
             else:
@@ -187,6 +192,12 @@ class HAPPO():
             self.policy.critic_optimizer.step()
             self.policy.critic_optimizer.zero_grad()
 
+            # 更新训练次数
+            self.train_times = 1
+        else:
+            self.train_times += 1
+
+        # print("train_times is", self.train_times)
         # return value_loss, critic_grad_norm, policy_loss, dist_entropy, actor_grad_norm, imp_weights
 
     def train(self, buffer, update_actor=True):

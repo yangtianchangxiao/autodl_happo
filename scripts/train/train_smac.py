@@ -19,8 +19,9 @@ from envs.env_wrappers_multiprocess import MultiDummyVecEnv
 from runners.separated.smac_runner import SMACRunner as Runner
 from envs.env_discrete import DiscreteActionEnv
 import pickle
-save_count = 18
+save_count = 19
 cuda_device = "cuda:0"
+# cuda_device = "cpu"
 """Train script for SMAC."""
 
 def make_train_env(all_args, map_set, map_num):
@@ -89,6 +90,8 @@ def parse_args(args, parser):
 
 
 def main(args):
+    torch.backends.cudnn.enabled = True
+    torch.backends.cudnn.benchmark = True 
     parser = get_config()
     all_args = parse_args(args, parser)
     print("all config: ", all_args)

@@ -196,7 +196,7 @@ def get_config():
 
     # network parameters
     parser.add_argument("--nn_type", type=str,
-                        default='mlp', choices=["mlp", "cnn", "mixer", 'resnet18'])
+                        default='mlp', choices=["mlp", "cnn", "mixer", 'resnet18', 'attention'])
 
     parser.add_argument("--add_dropout", action='store_true', default=False,
                         help="If True, dropout layers will be added in the mlp model, you can see it in algorithms/utils/mlp")
@@ -243,6 +243,9 @@ def get_config():
                         default=1, help="The number of recurrent layers.")
     parser.add_argument("--data_chunk_length", type=int, 
                         default=10, help="Time length of chunks used to train a recurrent_policy")
+    # attention parameters
+    parser.add_argument("--d_model", type=int, default=128, help="The dimension of model")
+    parser.add_argument("--nhead", type=int, default=4, help="The number of heads in the multiheadattention models")
     
     # optimizer parameters
     parser.add_argument("--lr", type=float, 

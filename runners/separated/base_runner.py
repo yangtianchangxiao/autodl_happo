@@ -91,6 +91,7 @@ class Runner(object):
             # checkpoint_critic_optimizer = torch.load(self.log_dir_address + 'critic_optimizer' + str(agent_id) + '.pt')
             # po.actor.load_state_dict(checkpoint_actor)
             # po.critic.load_state_dict(checkpoint_critic)
+            
             # lr_path = self.all_args.lr_path
             # critic_lr_path = self.all_args.critic_lr_path
                 # with open(lr_path, "r") as f:

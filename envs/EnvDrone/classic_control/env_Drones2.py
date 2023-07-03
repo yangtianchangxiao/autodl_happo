@@ -923,10 +923,8 @@ class SearchGrid(gym.Env):
             # 引入通信更新标志位的原因是，如果一个无人机的地图已经更新过了，就不需要再更新了
             if drone.communicate_list and drone.communicate_update_flag == False:
                 maps = np.array([self.drone_list[i].whole_map for i in drone.communicate_list] + [drone.whole_map])
-
                 # Compute the maximum values for channels 1, 2, and 3
                 max_channels = np.max(maps[:, [1, 2, 3], :, :], axis=0)
-
                 drone.whole_map[[1, 2, 3], :, :] = max_channels
                 drone.communicate_update_flag = True
                 for drone_id in drone.communicate_list:
@@ -953,7 +951,7 @@ class SearchGrid(gym.Env):
         # 发现新区域的奖励系数
         average_time_stamp_factor = 4 # 当禁止碰撞时，是4；不禁止碰撞时，是10
         time_stamp_update_gain = 4
-        collision_factor = 30
+        collision_factor = 100
         collision_decay = 0
         # 单步内，智能体探索区域重复的惩罚系数
         overlap_factor = 0.05
@@ -1038,7 +1036,6 @@ class SearchGrid(gym.Env):
         #     self.average_list = [0] * self.drone_num
         # print("new area reward",np.arraybd(self.average_list) * average_time_stamp_factor)
 
-        reward_list = [x + y * average_time_stamp_factor for x, y in zip(reward_list, self.average_list)]
         for i, drone in enumerate(self.drone_list):
             if drone.rescue_path_reduce_flag is True:
                 # print("Start guide: ", "agent", i, "repetition", drone.repetition_count, 'Mc_iter', self.MC_iter)   
@@ -1046,9 +1043,10 @@ class SearchGrid(gym.Env):
                 # print("origin reward is ", reward_list[i])
                 # reward_list[i] = reward_list[i] +  self.drone_list[i].open_information_gain * time_stamp_update_gain 
                 reward_list[i] = reward_list[i] +  time_stamp_update_gain 
-            if drone.rescue_path_reduce_flag is False:
-                reward_list[i] = reward_list[i] -  5*time_stamp_update_gain
-                
+            elif drone.rescue_path_reduce_flag is False:
+                reward_list[i] = reward_list[i] -  time_stamp_update_gain
+            elif drone.rescue_path_reduce_flag is None:
+                reward_list = [x + y * average_time_stamp_factor for x, y in zip(reward_list, self.average_list)]
             drone.rescue_path_reduce_flag = None
                 # print("该动作有利于脱困")
         # print("reward_list new area", reward_list)
@@ -1235,7 +1233,7 @@ class SearchGrid(gym.Env):
         self.agent_repetition = np.zeros(self.drone_num)
         self.agent_repetition_reward = np.zeros(self.drone_num)
         self.repetition_threshold = 10000 # 基础款MIXER里用的是5
-        self.repetition_threshold_for_reward = 3 # 用于指导智能体从死胡同等不好的地方出来
+        self.repetition_threshold_for_reward = 0 # 用于指导智能体从死胡同等不好的地方出来
         self.rescue_flag = False
         # The area explored by each agent each step
         self.average_list = [0] * self.drone_num
@@ -1282,13 +1280,14 @@ class SearchGrid(gym.Env):
         self.view_range_2 = view_range_2
         self.collision = np.zeros(self.drone_num) # 记录which drone take an action that will cause collision
         self.random_index = np.random.randint(0, self.map_num)
-        self.erosion_prob = 0.5
+        self.erosion_prob = 0.0
         self.choose_map = self.map_set[self.random_index]
         # 使用 NumPy 切片，隔一个采样一个
         self.choose_map = self.choose_map[::2, ::2]
         # self.choose_map = self.get_Map()
-        if np.random.rand() >self.erosion_prob:
-            self.choose_map = self.erode_and_add_obstacles(map=self.choose_map, erosion_probability=0.3, obstacle_probability=0.02, erosion_times=2)
+        
+        # if np.random.rand() >self.erosion_prob:
+        #     self.choose_map = self.erode_and_add_obstacles(map=self.choose_map, erosion_probability=0.3, obstacle_probability=0.02, erosion_times=2)
 
       
         # 生成一个随机整数（0 或 1）

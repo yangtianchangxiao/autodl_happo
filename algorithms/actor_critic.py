@@ -7,6 +7,7 @@ from algorithms.utils.rnn import RNNLayer
 from algorithms.utils.act import ACTLayer
 from algorithms.utils.mixer_layer import MixerBase
 from algorithms.utils.resnet18 import Resnet18
+from algorithms.utils.attention import Attention_model
 from utils.util import get_shape_from_obs_space
 
 
@@ -39,8 +40,12 @@ class Actor(nn.Module):
             base = MixerBase
         elif args.nn_type == 'resnet18':
             base = Resnet18
+        elif args.nn_type == 'attention':
+            base = Attention_model
+            
         self.base = base(args, obs_shape)
-
+        total_params = sum(p.numel() for p in self.base.parameters())
+        print(f'Total number of parameters in model: {total_params}')
         if self._use_naive_recurrent_policy or self._use_recurrent_policy:
             self.rnn = RNNLayer(self.hidden_size, self.hidden_size, self._recurrent_N, self._use_orthogonal)
 
@@ -148,6 +153,8 @@ class Critic(nn.Module):
             base = MixerBase
         elif args.nn_type == 'resnet18':
             base = Resnet18
+        elif args.nn_type == 'attention':
+            base = Attention_model
         self.base = base(args, cent_obs_shape)
 
         if self._use_naive_recurrent_policy or self._use_recurrent_policy:
