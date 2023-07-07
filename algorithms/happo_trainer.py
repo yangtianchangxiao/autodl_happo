@@ -228,15 +228,14 @@ class HAPPO():
         # train_info['actor_grad_norm'] = 0
         # train_info['critic_grad_norm'] = 0
         # train_info['ratio'] = 0
-        
-        for _ in range(self.ppo_epoch):
-            if self._use_recurrent_policy:
-                data_generator = buffer.recurrent_generator(advantages, self.num_mini_batch, self.data_chunk_length)
-            elif self._use_naive_recurrent:
-                data_generator = buffer.naive_recurrent_generator(advantages, self.num_mini_batch)
-            else:
-                data_generator = buffer.feed_forward_generator(advantages, self.num_mini_batch)
+        if self._use_recurrent_policy:
+            data_generator = buffer.recurrent_generator(advantages, self.num_mini_batch, self.data_chunk_length)
+        elif self._use_naive_recurrent:
+            data_generator = buffer.naive_recurrent_generator(advantages, self.num_mini_batch)
+        else:
+            data_generator = buffer.feed_forward_generator(advantages, self.num_mini_batch)
 
+        for _ in range(self.ppo_epoch):
             for sample_time, sample in enumerate(data_generator):
                 # value_loss, critic_grad_norm, policy_loss, dist_entropy, actor_grad_norm, imp_weights = self.ppo_update(sample, update_actor=update_actor)
                 # sample_time 从1开始计数，这样可以避免一开始sample_time % batch_expand_time ==0

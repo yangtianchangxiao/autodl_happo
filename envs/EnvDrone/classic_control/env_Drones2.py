@@ -72,6 +72,7 @@ class Drones(object):
         self.communicate_update_flag = False
         # 有时候因为障碍物生成的不好，智能体会处在一个被障碍物包围的局面，这个时候就需要重开
         self.surrounded_flag = False
+        self.collision_times = 0
 
 
 class Human(object):
@@ -440,9 +441,8 @@ class SearchGrid(gym.Env):
         # 整合智能体自己的位置到 joint_map里
         for drone in self.drone_list:
             self.joint_map_process[drone.pos[0], drone.pos[1]] = 5.5
-        
-
-        
+            drone.repetition_count = 0
+            drone.repetition_flag = None
         # return observation, self.joint_map.flatten()
         return observation, self.joint_map_process.flatten()
 
@@ -487,6 +487,7 @@ class SearchGrid(gym.Env):
             # 禁止撞击
             if self.land_mark_map[temp_pos[0], temp_pos[1]] > 0:
                 self.collision[k] = 1
+                self.drone_list[k].collision_times += 1
                 # self.drone_list[k].pos = temp_pos # 有这个就不禁止撞击了
             else:
                 if self.drone_list[k].whole_map[1, self.drone_list[k].pos[0], self.drone_list[k].pos[1]] > 0:
@@ -820,6 +821,7 @@ class SearchGrid(gym.Env):
             # print("drone id", drone.id,"repetition_count", drone.repetition_count)
         else:
             drone.repetition_count = 0
+            drone.rescue_path_reduce_flag = None
         
 
         
@@ -951,7 +953,8 @@ class SearchGrid(gym.Env):
         # 发现新区域的奖励系数
         average_time_stamp_factor = 4 # 当禁止碰撞时，是4；不禁止碰撞时，是10
         time_stamp_update_gain = 4
-        collision_factor = 100
+        collision_factor = 300
+        close_penalty = 20
         collision_decay = 0
         # 单步内，智能体探索区域重复的惩罚系数
         overlap_factor = 0.05
@@ -1044,7 +1047,7 @@ class SearchGrid(gym.Env):
                 # reward_list[i] = reward_list[i] +  self.drone_list[i].open_information_gain * time_stamp_update_gain 
                 reward_list[i] = reward_list[i] +  time_stamp_update_gain 
             elif drone.rescue_path_reduce_flag is False:
-                reward_list[i] = reward_list[i] -  time_stamp_update_gain
+                reward_list[i] = reward_list[i] -  2*time_stamp_update_gain
             elif drone.rescue_path_reduce_flag is None:
                 reward_list = [x + y * average_time_stamp_factor for x, y in zip(reward_list, self.average_list)]
             drone.rescue_path_reduce_flag = None
@@ -1103,6 +1106,28 @@ class SearchGrid(gym.Env):
                 reward_list[drone.id] -= (collision_factor - min(collision_decay, self.MC_iter))
             if self.drone_list[i].surrounded_flag is True:
                 done = True
+            # if self.drone_list[i].collision_times > self.collision_threshold:
+            #     print("collision times is", self.drone_list[i].collision_times)
+            #     done = True
+            for offset in self.offsets:
+                new_x = drone.pos[0] + offset[0]
+                new_y = drone.pos[1] + offset[1]
+                # 添加边界检查，防止地图越界
+                if 0 <= new_x < self.land_mark_map.shape[0] and 0 <= new_y < self.land_mark_map.shape[1]:
+                    if self.land_mark_map[new_x, new_y] > 0:
+                        # 如果有障碍物，检查相反方向的两个格子
+                        opposite_x1 = drone.pos[0] - offset[0]
+                        opposite_y1 = drone.pos[1] - offset[1]
+                        opposite_x2 = drone.pos[0] - 2 * offset[0]
+                        opposite_y2 = drone.pos[1] - 2 * offset[1]
+                        # 检查两个格子是否在地图内，并且不是障碍物
+                        if (0 <= opposite_x1 < self.land_mark_map.shape[0] and 0 <= opposite_y1 < self.land_mark_map.shape[1] and self.land_mark_map[opposite_x1, opposite_y1] <= 0) and \
+                        (0 <= opposite_x2 < self.land_mark_map.shape[0] and 0 <= opposite_y2 < self.land_mark_map.shape[1] and self.land_mark_map[opposite_x2, opposite_y2] <= 0):
+                            # 对应方向的grid存在障碍物，且相反方向的两个格子都不是障碍物，减少相应的奖励
+                            reward_list[drone.id] -= close_penalty
+                        break
+
+        
         # 时间用尽但是还没有完成任务的惩罚
         if self.time_stamp > self.run_time:  # 超时
             done = True
@@ -1206,7 +1231,11 @@ class SearchGrid(gym.Env):
     def init_param(self):
         self.MC_iter = 0
         self.target_occur_iter = 100
-        self.run_time = 10 # 10 25 40 45 55 65 75 100 110 140 200 Run run_time steps per game 当不禁止碰撞的时候，我用的参数是1000
+        low = 20
+        high = 30
+        self.run_time = 20 # np.random.randint(low=low, high=high) # 65 10 25 40 45 55 65 75 100 110 140 200 Run run_time steps per game 当不禁止碰撞的时候，我用的参数是1000
+        self.collision_threshold = 2
+        self.offsets = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # 上下左右四个方向的偏移
         self.map_size = 60
         self.drone_num = 2
         # Rescue paragrams
@@ -1280,14 +1309,14 @@ class SearchGrid(gym.Env):
         self.view_range_2 = view_range_2
         self.collision = np.zeros(self.drone_num) # 记录which drone take an action that will cause collision
         self.random_index = np.random.randint(0, self.map_num)
-        self.erosion_prob = 0.0
+        self.erosion_prob = 0
         self.choose_map = self.map_set[self.random_index]
         # 使用 NumPy 切片，隔一个采样一个
         self.choose_map = self.choose_map[::2, ::2]
         # self.choose_map = self.get_Map()
         
         # if np.random.rand() >self.erosion_prob:
-        #     self.choose_map = self.erode_and_add_obstacles(map=self.choose_map, erosion_probability=0.3, obstacle_probability=0.02, erosion_times=2)
+        #     self.choose_map = self.erode_and_add_obstacles(map=self.choose_map, erosion_probability=0.3, obstacle_probability=0.05, erosion_times=2)
 
       
         # 生成一个随机整数（0 或 1）

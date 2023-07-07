@@ -47,7 +47,7 @@ def find_nearest_frontier(map, start):
 
     np.set_printoptions(threshold=np.inf)  # Set the print threshold to infinity
     map[start[0], start[1]] = 100
-    print(map)
+    # print(map)
     print("None!!!!!!!!!!!!!!!!!!!1！")
     return None
 

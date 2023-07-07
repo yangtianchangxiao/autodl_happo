@@ -8,6 +8,9 @@ from algorithms.utils.act import ACTLayer
 from algorithms.utils.mixer_layer import MixerBase
 from algorithms.utils.resnet18 import Resnet18
 from algorithms.utils.attention import Attention_model
+from algorithms.utils.attention_modified import Attention_model as Attention_model_modified
+from algorithms.utils.attention_batchnorm import Attention_model as Attention_model_batchnorm
+from algorithms.utils.attention_resnet import Attention_model as Attention_model_resnet
 from utils.util import get_shape_from_obs_space
 
 
@@ -42,7 +45,12 @@ class Actor(nn.Module):
             base = Resnet18
         elif args.nn_type == 'attention':
             base = Attention_model
-            
+        elif args.nn_type == 'attention_modified':
+            base = Attention_model_modified
+        elif args.nn_type == 'attention_batchnorm':
+            base = Attention_model_batchnorm
+        elif args.nn_type == 'attention_resnet':
+            base = Attention_model_resnet
         self.base = base(args, obs_shape)
         total_params = sum(p.numel() for p in self.base.parameters())
         print(f'Total number of parameters in model: {total_params}')
@@ -155,6 +163,13 @@ class Critic(nn.Module):
             base = Resnet18
         elif args.nn_type == 'attention':
             base = Attention_model
+        elif args.nn_type == 'attention_modified':
+            base = Attention_model_modified
+        elif args.nn_type == 'attention_batchnorm':
+            base = Attention_model_batchnorm
+        elif args.nn_type == 'attention_resnet':
+            base = Attention_model_resnet
+            
         self.base = base(args, cent_obs_shape)
 
         if self._use_naive_recurrent_policy or self._use_recurrent_policy:

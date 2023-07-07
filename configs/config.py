@@ -163,7 +163,7 @@ def get_config():
     parser.add_argument("--seed", type=int, 
                         default=2, help="Random seed for numpy/torch")
     parser.add_argument("--seed_specify", action="store_false",
-                        default=True, help="Random or specify seed for numpy/torch")
+                        default=False, help="Random or specify seed for numpy/torch")
     parser.add_argument("--running_id", type=int, 
                         default=2, help="the running index of experiment")
     parser.add_argument("--cuda", action='store_false', 
@@ -196,7 +196,8 @@ def get_config():
 
     # network parameters
     parser.add_argument("--nn_type", type=str,
-                        default='mlp', choices=["mlp", "cnn", "mixer", 'resnet18', 'attention'])
+                        default='mlp', choices=["mlp", "cnn", "mixer", 'resnet18', 'attention', 'attention_modified',
+                                                'attention_batchnorm', 'attention_batchnorm_dense', 'attention_batchnorm_modified', 'attention_resnet'])
 
     parser.add_argument("--add_dropout", action='store_true', default=False,
                         help="If True, dropout layers will be added in the mlp model, you can see it in algorithms/utils/mlp")

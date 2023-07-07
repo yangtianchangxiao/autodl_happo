@@ -26,7 +26,7 @@ class resnet(nn.Module):
             # self.batch_norm32,
             self.batch_norm32_30_30,
             self.activate,
-            nn.Dropout(dropout_prob)  # 添加dropout，丢弃率为0.5
+            nn.Dropout(0)  # 添加dropout，丢弃率为0.5
         )
 
         self.residual = nn.Sequential(
@@ -34,17 +34,17 @@ class resnet(nn.Module):
             # self.batch_norm32,
             self.batch_norm64_15_15,
             self.activate,
-            nn.Dropout(dropout_prob),  # 添加dropout，丢弃率为0.5
+            nn.Dropout(0),  # 添加dropout，丢弃率为0.5
             self.conv_same1,
             # self.batch_norm64,
             self.batch_norm64_15_15,
             self.activate,
-            nn.Dropout(dropout_prob),  # 添加dropout，丢弃率为0.5
+            nn.Dropout(0),  # 添加dropout，丢弃率为0.5
             self.conv_same2,
             # self.batch_norm64,
             self.batch_norm32_15_15,
             self.activate,
-            nn.Dropout(dropout_prob)   # 添加dropout，丢弃率为0.5
+            nn.Dropout(0)   # 添加dropout，丢弃率为0.5
         )
 
     def forward(self, x):
