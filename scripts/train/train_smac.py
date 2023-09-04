@@ -19,7 +19,7 @@ from envs.env_wrappers_multiprocess import MultiDummyVecEnv
 from runners.separated.smac_runner import SMACRunner as Runner
 from envs.env_discrete import DiscreteActionEnv
 import pickle
-save_count = 17
+save_count = 18
 cuda_device = "cuda:0"
 """Train script for SMAC."""
 

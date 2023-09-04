@@ -1,0 +1,1004 @@
+targets_fetched: 6
+complete: True
+total_time: 41
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 37
+
+targets_fetched: 6
+complete: True
+total_time: 26
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 0
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 66
+
+targets_fetched: 6
+complete: True
+total_time: 186
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 53
+
+targets_fetched: 6
+complete: True
+total_time: 77
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 0
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 62
+
+targets_fetched: 6
+complete: True
+total_time: 51
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 62
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 50
+
+targets_fetched: 0
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 183
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 64
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 27
+
+targets_fetched: 6
+complete: True
+total_time: 36
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 43
+
+targets_fetched: 6
+complete: True
+total_time: 144
+
+targets_fetched: 0
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 23
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 149
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 92
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 75
+
+targets_fetched: 6
+complete: True
+total_time: 58
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 0
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 52
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 81
+
+targets_fetched: 6
+complete: True
+total_time: 62
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 0
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 0
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 62
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 185
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 0
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 31
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 246
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 130
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 0
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 71
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 209
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 72
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 174
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 53
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 38
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 162
+
+targets_fetched: 6
+complete: True
+total_time: 52
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 17
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 34
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 63
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 203
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 46
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 0
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 66
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 0
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 122
+
+targets_fetched: 6
+complete: True
+total_time: 151
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 52
+
+targets_fetched: 6
+complete: True
+total_time: 45
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 144
+
+targets_fetched: 0
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 131
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 0
+complete: False
+total_time: 251
+
+targets_fetched: 0
+complete: False
+total_time: 251
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 84
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 34
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 172
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 0
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 238
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 73
+
+targets_fetched: 6
+complete: True
+total_time: 63
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 43
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 154
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 0
+complete: False
+total_time: 251
+
+targets_fetched: 0
+complete: False
+total_time: 251
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 248
+
+targets_fetched: 2
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 3
+complete: False
+total_time: 251
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 0
+complete: False
+total_time: 251
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 120
+
+targets_fetched: 2
+complete: False
+total_time: 251
+

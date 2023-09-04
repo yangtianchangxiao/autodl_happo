@@ -144,8 +144,6 @@ class AStar:
         for i_path in range(len(path)-1):
             # print(f"({i_path.x},{i_path.y})->")
             actions.append(self.get_action([path[i_path].x, path[i_path].y], [path[i_path+1].x, path[i_path+1].y]))
-        print('===== Algorithm finish in', int(end_time - start_time), ' seconds')
-        print("actions are", actions)
         path_list = [(i_path.x, i_path.y) for i_path in path]
         return path_list, actions
     def get_action(self,p1, p2):

@@ -1,0 +1,1004 @@
+targets_fetched: 6
+complete: True
+total_time: 38
+
+targets_fetched: 6
+complete: True
+total_time: 52
+
+targets_fetched: 6
+complete: True
+total_time: 96
+
+targets_fetched: 6
+complete: True
+total_time: 160
+
+targets_fetched: 6
+complete: True
+total_time: 190
+
+targets_fetched: 6
+complete: True
+total_time: 104
+
+targets_fetched: 6
+complete: True
+total_time: 146
+
+targets_fetched: 6
+complete: True
+total_time: 230
+
+targets_fetched: 6
+complete: True
+total_time: 89
+
+targets_fetched: 6
+complete: True
+total_time: 238
+
+targets_fetched: 6
+complete: True
+total_time: 109
+
+targets_fetched: 6
+complete: True
+total_time: 107
+
+targets_fetched: 6
+complete: True
+total_time: 127
+
+targets_fetched: 6
+complete: True
+total_time: 111
+
+targets_fetched: 6
+complete: True
+total_time: 115
+
+targets_fetched: 6
+complete: True
+total_time: 105
+
+targets_fetched: 6
+complete: True
+total_time: 153
+
+targets_fetched: 6
+complete: True
+total_time: 163
+
+targets_fetched: 6
+complete: True
+total_time: 115
+
+targets_fetched: 6
+complete: True
+total_time: 101
+
+targets_fetched: 6
+complete: True
+total_time: 56
+
+targets_fetched: 6
+complete: True
+total_time: 116
+
+targets_fetched: 6
+complete: True
+total_time: 92
+
+targets_fetched: 6
+complete: True
+total_time: 88
+
+targets_fetched: 6
+complete: True
+total_time: 125
+
+targets_fetched: 6
+complete: True
+total_time: 93
+
+targets_fetched: 6
+complete: True
+total_time: 89
+
+targets_fetched: 6
+complete: True
+total_time: 133
+
+targets_fetched: 6
+complete: True
+total_time: 121
+
+targets_fetched: 6
+complete: True
+total_time: 140
+
+targets_fetched: 4
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 38
+
+targets_fetched: 6
+complete: True
+total_time: 158
+
+targets_fetched: 6
+complete: True
+total_time: 123
+
+targets_fetched: 6
+complete: True
+total_time: 71
+
+targets_fetched: 6
+complete: True
+total_time: 166
+
+targets_fetched: 6
+complete: True
+total_time: 81
+
+targets_fetched: 6
+complete: True
+total_time: 64
+
+targets_fetched: 6
+complete: True
+total_time: 32
+
+targets_fetched: 6
+complete: True
+total_time: 85
+
+targets_fetched: 6
+complete: True
+total_time: 96
+
+targets_fetched: 6
+complete: True
+total_time: 92
+
+targets_fetched: 6
+complete: True
+total_time: 107
+
+targets_fetched: 6
+complete: True
+total_time: 155
+
+targets_fetched: 6
+complete: True
+total_time: 130
+
+targets_fetched: 6
+complete: True
+total_time: 209
+
+targets_fetched: 6
+complete: True
+total_time: 100
+
+targets_fetched: 6
+complete: True
+total_time: 69
+
+targets_fetched: 6
+complete: True
+total_time: 101
+
+targets_fetched: 6
+complete: True
+total_time: 125
+
+targets_fetched: 6
+complete: True
+total_time: 88
+
+targets_fetched: 6
+complete: True
+total_time: 37
+
+targets_fetched: 6
+complete: True
+total_time: 93
+
+targets_fetched: 6
+complete: True
+total_time: 151
+
+targets_fetched: 6
+complete: True
+total_time: 231
+
+targets_fetched: 6
+complete: True
+total_time: 133
+
+targets_fetched: 6
+complete: True
+total_time: 103
+
+targets_fetched: 6
+complete: True
+total_time: 150
+
+targets_fetched: 6
+complete: True
+total_time: 146
+
+targets_fetched: 6
+complete: True
+total_time: 184
+
+targets_fetched: 6
+complete: True
+total_time: 221
+
+targets_fetched: 6
+complete: True
+total_time: 73
+
+targets_fetched: 6
+complete: True
+total_time: 157
+
+targets_fetched: 6
+complete: True
+total_time: 134
+
+targets_fetched: 6
+complete: True
+total_time: 181
+
+targets_fetched: 6
+complete: True
+total_time: 199
+
+targets_fetched: 6
+complete: True
+total_time: 139
+
+targets_fetched: 6
+complete: True
+total_time: 156
+
+targets_fetched: 6
+complete: True
+total_time: 208
+
+targets_fetched: 6
+complete: True
+total_time: 124
+
+targets_fetched: 6
+complete: True
+total_time: 109
+
+targets_fetched: 6
+complete: True
+total_time: 104
+
+targets_fetched: 6
+complete: True
+total_time: 114
+
+targets_fetched: 6
+complete: True
+total_time: 137
+
+targets_fetched: 6
+complete: True
+total_time: 143
+
+targets_fetched: 6
+complete: True
+total_time: 73
+
+targets_fetched: 6
+complete: True
+total_time: 167
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 113
+
+targets_fetched: 6
+complete: True
+total_time: 125
+
+targets_fetched: 6
+complete: True
+total_time: 179
+
+targets_fetched: 6
+complete: True
+total_time: 42
+
+targets_fetched: 6
+complete: True
+total_time: 152
+
+targets_fetched: 6
+complete: True
+total_time: 175
+
+targets_fetched: 6
+complete: True
+total_time: 145
+
+targets_fetched: 6
+complete: True
+total_time: 84
+
+targets_fetched: 6
+complete: True
+total_time: 125
+
+targets_fetched: 6
+complete: True
+total_time: 160
+
+targets_fetched: 6
+complete: True
+total_time: 215
+
+targets_fetched: 6
+complete: True
+total_time: 182
+
+targets_fetched: 6
+complete: True
+total_time: 102
+
+targets_fetched: 6
+complete: True
+total_time: 112
+
+targets_fetched: 6
+complete: True
+total_time: 130
+
+targets_fetched: 6
+complete: True
+total_time: 161
+
+targets_fetched: 6
+complete: True
+total_time: 166
+
+targets_fetched: 6
+complete: True
+total_time: 194
+
+targets_fetched: 6
+complete: True
+total_time: 133
+
+targets_fetched: 6
+complete: True
+total_time: 23
+
+targets_fetched: 6
+complete: True
+total_time: 89
+
+targets_fetched: 6
+complete: True
+total_time: 138
+
+targets_fetched: 6
+complete: True
+total_time: 77
+
+targets_fetched: 6
+complete: True
+total_time: 97
+
+targets_fetched: 6
+complete: True
+total_time: 149
+
+targets_fetched: 6
+complete: True
+total_time: 97
+
+targets_fetched: 6
+complete: True
+total_time: 84
+
+targets_fetched: 6
+complete: True
+total_time: 166
+
+targets_fetched: 6
+complete: True
+total_time: 84
+
+targets_fetched: 6
+complete: True
+total_time: 118
+
+targets_fetched: 6
+complete: True
+total_time: 94
+
+targets_fetched: 6
+complete: True
+total_time: 138
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 63
+
+targets_fetched: 6
+complete: True
+total_time: 129
+
+targets_fetched: 6
+complete: True
+total_time: 213
+
+targets_fetched: 6
+complete: True
+total_time: 121
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 109
+
+targets_fetched: 1
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 146
+
+targets_fetched: 6
+complete: True
+total_time: 102
+
+targets_fetched: 6
+complete: True
+total_time: 79
+
+targets_fetched: 6
+complete: True
+total_time: 71
+
+targets_fetched: 6
+complete: True
+total_time: 144
+
+targets_fetched: 6
+complete: True
+total_time: 84
+
+targets_fetched: 6
+complete: True
+total_time: 137
+
+targets_fetched: 6
+complete: True
+total_time: 133
+
+targets_fetched: 6
+complete: True
+total_time: 200
+
+targets_fetched: 6
+complete: True
+total_time: 149
+
+targets_fetched: 6
+complete: True
+total_time: 184
+
+targets_fetched: 6
+complete: True
+total_time: 95
+
+targets_fetched: 6
+complete: True
+total_time: 174
+
+targets_fetched: 6
+complete: True
+total_time: 79
+
+targets_fetched: 6
+complete: True
+total_time: 98
+
+targets_fetched: 6
+complete: True
+total_time: 135
+
+targets_fetched: 6
+complete: True
+total_time: 73
+
+targets_fetched: 6
+complete: True
+total_time: 107
+
+targets_fetched: 6
+complete: True
+total_time: 57
+
+targets_fetched: 6
+complete: True
+total_time: 89
+
+targets_fetched: 6
+complete: True
+total_time: 110
+
+targets_fetched: 6
+complete: True
+total_time: 105
+
+targets_fetched: 6
+complete: True
+total_time: 136
+
+targets_fetched: 6
+complete: True
+total_time: 115
+
+targets_fetched: 6
+complete: True
+total_time: 67
+
+targets_fetched: 6
+complete: True
+total_time: 77
+
+targets_fetched: 6
+complete: True
+total_time: 66
+
+targets_fetched: 6
+complete: True
+total_time: 178
+
+targets_fetched: 6
+complete: True
+total_time: 176
+
+targets_fetched: 6
+complete: True
+total_time: 99
+
+targets_fetched: 6
+complete: True
+total_time: 121
+
+targets_fetched: 6
+complete: True
+total_time: 189
+
+targets_fetched: 6
+complete: True
+total_time: 76
+
+targets_fetched: 6
+complete: True
+total_time: 56
+
+targets_fetched: 6
+complete: True
+total_time: 144
+
+targets_fetched: 6
+complete: True
+total_time: 82
+
+targets_fetched: 6
+complete: True
+total_time: 32
+
+targets_fetched: 6
+complete: True
+total_time: 154
+
+targets_fetched: 6
+complete: True
+total_time: 140
+
+targets_fetched: 6
+complete: True
+total_time: 63
+
+targets_fetched: 6
+complete: True
+total_time: 81
+
+targets_fetched: 6
+complete: True
+total_time: 143
+
+targets_fetched: 6
+complete: True
+total_time: 180
+
+targets_fetched: 6
+complete: True
+total_time: 116
+
+targets_fetched: 6
+complete: True
+total_time: 69
+
+targets_fetched: 6
+complete: True
+total_time: 44
+
+targets_fetched: 6
+complete: True
+total_time: 120
+
+targets_fetched: 6
+complete: True
+total_time: 123
+
+targets_fetched: 6
+complete: True
+total_time: 169
+
+targets_fetched: 6
+complete: True
+total_time: 154
+
+targets_fetched: 6
+complete: True
+total_time: 139
+
+targets_fetched: 6
+complete: True
+total_time: 133
+
+targets_fetched: 6
+complete: True
+total_time: 64
+
+targets_fetched: 6
+complete: True
+total_time: 196
+
+targets_fetched: 6
+complete: True
+total_time: 96
+
+targets_fetched: 5
+complete: False
+total_time: 251
+
+targets_fetched: 6
+complete: True
+total_time: 49
+
+targets_fetched: 6
+complete: True
+total_time: 113
+
+targets_fetched: 6
+complete: True
+total_time: 141
+
+targets_fetched: 6
+complete: True
+total_time: 165
+
+targets_fetched: 6
+complete: True
+total_time: 169
+
+targets_fetched: 6
+complete: True
+total_time: 214
+
+targets_fetched: 6
+complete: True
+total_time: 168
+
+targets_fetched: 6
+complete: True
+total_time: 145
+
+targets_fetched: 6
+complete: True
+total_time: 209
+
+targets_fetched: 6
+complete: True
+total_time: 108
+
+targets_fetched: 6
+complete: True
+total_time: 192
+
+targets_fetched: 6
+complete: True
+total_time: 180
+
+targets_fetched: 6
+complete: True
+total_time: 152
+
+targets_fetched: 6
+complete: True
+total_time: 79
+
+targets_fetched: 6
+complete: True
+total_time: 182
+
+targets_fetched: 6
+complete: True
+total_time: 58
+
+targets_fetched: 6
+complete: True
+total_time: 69
+
+targets_fetched: 6
+complete: True
+total_time: 52
+
+targets_fetched: 6
+complete: True
+total_time: 185
+
+targets_fetched: 6
+complete: True
+total_time: 187
+
+targets_fetched: 6
+complete: True
+total_time: 88
+
+targets_fetched: 6
+complete: True
+total_time: 66
+
+targets_fetched: 6
+complete: True
+total_time: 90
+
+targets_fetched: 6
+complete: True
+total_time: 116
+
+targets_fetched: 6
+complete: True
+total_time: 174
+
+targets_fetched: 6
+complete: True
+total_time: 160
+
+targets_fetched: 6
+complete: True
+total_time: 139
+
+targets_fetched: 6
+complete: True
+total_time: 130
+
+targets_fetched: 6
+complete: True
+total_time: 122
+
+targets_fetched: 6
+complete: True
+total_time: 115
+
+targets_fetched: 6
+complete: True
+total_time: 150
+
+targets_fetched: 6
+complete: True
+total_time: 127
+
+targets_fetched: 6
+complete: True
+total_time: 11
+
+targets_fetched: 6
+complete: True
+total_time: 32
+
+targets_fetched: 6
+complete: True
+total_time: 188
+
+targets_fetched: 6
+complete: True
+total_time: 100
+
+targets_fetched: 6
+complete: True
+total_time: 110
+
+targets_fetched: 6
+complete: True
+total_time: 119
+
+targets_fetched: 6
+complete: True
+total_time: 95
+
+targets_fetched: 6
+complete: True
+total_time: 86
+
+targets_fetched: 6
+complete: True
+total_time: 82
+
+targets_fetched: 6
+complete: True
+total_time: 151
+
+targets_fetched: 6
+complete: True
+total_time: 66
+
+targets_fetched: 6
+complete: True
+total_time: 131
+
+targets_fetched: 6
+complete: True
+total_time: 120
+
+targets_fetched: 6
+complete: True
+total_time: 115
+
+targets_fetched: 6
+complete: True
+total_time: 46
+
+targets_fetched: 6
+complete: True
+total_time: 191
+
+targets_fetched: 6
+complete: True
+total_time: 141
+
+targets_fetched: 6
+complete: True
+total_time: 150
+
+targets_fetched: 6
+complete: True
+total_time: 128
+
+targets_fetched: 6
+complete: True
+total_time: 177
+
+targets_fetched: 6
+complete: True
+total_time: 175
+
+targets_fetched: 6
+complete: True
+total_time: 121
+
+targets_fetched: 6
+complete: True
+total_time: 187
+
+targets_fetched: 6
+complete: True
+total_time: 39
+
+targets_fetched: 6
+complete: True
+total_time: 170
+
+targets_fetched: 6
+complete: True
+total_time: 94
+
+targets_fetched: 6
+complete: True
+total_time: 90
+
+targets_fetched: 6
+complete: True
+total_time: 185
+
+targets_fetched: 6
+complete: True
+total_time: 146
+
+targets_fetched: 6
+complete: True
+total_time: 87
+
+targets_fetched: 6
+complete: True
+total_time: 131
+
+targets_fetched: 6
+complete: True
+total_time: 110
+
+targets_fetched: 6
+complete: True
+total_time: 160
+
+targets_fetched: 6
+complete: True
+total_time: 91
+
+targets_fetched: 6
+complete: True
+total_time: 167
+
+targets_fetched: 6
+complete: True
+total_time: 105
+
+targets_fetched: 6
+complete: True
+total_time: 203
+
+targets_fetched: 6
+complete: True
+total_time: 45
+
+targets_fetched: 6
+complete: True
+total_time: 119
+
+targets_fetched: 6
+complete: True
+total_time: 82
+
+targets_fetched: 6
+complete: True
+total_time: 149
+
+targets_fetched: 6
+complete: True
+total_time: 107
+
+targets_fetched: 6
+complete: True
+total_time: 48
+
+targets_fetched: 6
+complete: True
+total_time: 195
+
+targets_fetched: 6
+complete: True
+total_time: 167
+

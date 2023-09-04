@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import torch
 # from env_Drones import EnvDrones
 import random
@@ -6,11 +8,13 @@ import os
 
 sys.path.append(r"d:/code/TRPO-in-MARL")
 sys.path.append(r"/home/cx")
+sys.path.append(r"/home/ubuntu/autodl_one_layer")
 
 from configs.config import get_config
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.gridspec import GridSpec
+
 import time
 import numpy as np
 
@@ -25,13 +29,26 @@ import torch.nn.functional as F
 import rescue
 import pickle
 # maddpg = torch.load("/home/lmy/Downloads/episode_9900.pth")
+
+# 在程序的开头清空数据记录
+happo_cu_data_dir = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_cu_data.txt"
+frontier_dir = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/frontier.txt"
+happo_cu_data_dir_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_cu_data_dynamic.txt"
+frontier_dir_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/frontier_dynamic.txt"
+frontier_dir_dynamic_2 = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/frontier_dynamic_2.txt"
+happo_no_cu_collision = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_collision.txt"
+happo_no_cu_no_collision_200 = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_no_collision_200.txt"
+with open(happo_no_cu_collision, "w") as f:
+    pass
+
 num_episodes = 50000  # 一共运行 200 个 episode
 record_fre = 10000  # 100 个 episode 记录一次
 # env = gym.make("SearchGrid-v0")
 # train_path = 'D:\code\\rl_local\RL-in-multi-robot-foraging\marl\light_mappo\envs\\resize_scale_120\\train_data.pickle'
 # test_path = 'D:\code\\rl_local\RL-in-multi-robot-foraging\marl\light_mappo\envs\\resize_scale_120\\test_data.pickle'
-train_path = os.path.join('/home/cx', 'light_mappo/envs', 'resize_scale_120', 'train_data.pickle')
-test_path = os.path.join('D:', '\code', 'resize_scale_120', 'test_data.pickle')
+train_path = os.path.join('/home/ubuntu/autodl_one_layer', 'light_mappo/envs', 'resize_scale_120', 'train_data.pickle')
+
+test_path = os.path.join('/home/ubuntu/autodl_one_layer/envs/resize_scale_120/', 'test_data.pickle')
 # test_path = os.path.join('D:', '\code', 'resize_scale_120', 'test_data.pickle')
 with open(train_path, 'rb') as tp:
     data = pickle.load(tp)
@@ -39,8 +56,10 @@ with open(train_path, 'rb') as tp:
 map_num = len(data)
 env = search_grid.SearchGrid(map_set=data, map_num=map_num)
 
-path0 = r"/home/cx/mappo_model/happo_57_17/actor_agent0.pt"
-path1 = r"/home/cx/mappo_model/happo_57_17/actor_agent1.pt"
+# path0 = r"/home/ubuntu/autodl_one_layer/mappo_model/happo_57_17/actor_agent0.pt"
+# path1 = r"/home/ubuntu/autodl_one_layer/mappo_model/happo_57_17/actor_agent1.pt"
+path0 = r"/home/ubuntu/autodl_one_layer/mappo_model/happo_57_1/actor_agent_copy0.pt"
+path1 = r"/home/ubuntu/autodl_one_layer/mappo_model/happo_57_1/actor_agent_copy1.pt"
 prev_layer_norm_weight = None
 prev_layer_norm_bias = None
 
@@ -62,10 +81,10 @@ def parse_args(args, parser):
 parser = get_config()
 
 all_args = parse_args(sys.argv[1:], parser)
-env.seed(all_args.seed + 0 * 1000)
-torch.manual_seed(all_args.seed)
-torch.cuda.manual_seed_all(all_args.seed)
-np.random.seed(all_args.seed)
+env.seed(1)
+torch.manual_seed(1)
+torch.cuda.manual_seed_all(1)
+np.random.seed(1)
 actor_1 = actor(all_args, env.observation_space, env.action_space)
 #
 # print("Actor state_dict keys:")
@@ -84,7 +103,10 @@ actor_2.load_state_dict(checkpoint1)
 actor_2 = actor_2.eval()
 
 agents = [actor_1, actor_2]
-reputation_threshold = 10000
+# agents = [actor_2, actor_1]
+# indices = np.arange(env.num_agents)
+# acotr = [actor[i] for i in indices]
+reputation_threshold = 100
 
 
 
@@ -170,17 +192,50 @@ def generate_path(env, id):
     # ax1.plot(y, x, c='r', lw=2)
     return action_list, x, y
 
+
+def get_action(obs, robot_pos):   #将状态输入模型得到动作
+    available_actions = np.ones((2,4))
+    obs = obs.reshape(2,60,60)
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # 上、下、左、右
+    # self.get_logger().info(f'robot_pos[0]: {robot_pos[0]}')
+    for i in range(2):  # 对于两个机器人
+        for j, (dx, dy) in enumerate(directions):  # 对于每个方向
+            if obs[i][robot_pos[i][0] + dx, robot_pos[i][1] + dy] in [1, 5.5, -4.5]:
+                available_actions[i, j] = 0
+    return available_actions
+                
 obs, _ = env.reset()
+ax3_image = obs
 fig = plt.figure()
-gs = GridSpec(1, 2, figure=fig)
+gs = GridSpec(2, 2, figure=fig)
 ax1 = fig.add_subplot(gs[0:1, 0:1])
 ax2 = fig.add_subplot(gs[0:1, 1:2])
+ax3 = fig.add_subplot(gs[1:2, 0:1])
+ax4 = fig.add_subplot(gs[1:2, 1:2])
 
-ax1.imshow(env.get_full_obs())
-ax2.imshow(env.get_joint_obs(env.MC_iter))
+ax1_image = env.get_full_obs()
+ax2_image = env.get_joint_obs(env.MC_iter) 
+ax3_image = np.ones((env.map_size, env.map_size, 3)) * 0.5
+ax4_image = ax1_image
+for i, drone in enumerate(env.drone_list):
+    ax4_image[drone.pos[0], drone.pos[1]] = [0 , 0.25 *i, 0] 
+
+
+# 找到 ax2_image 中所有非 0.5 的元素的索引
+indices = np.where(ax2_image != 0.5)
+
+# 将 ax2_image 中对应位置的值赋给 ax3_image
+ax3_image[indices] = ax2_image[indices]
+
+ax1.imshow(ax1_image)
+ax2.imshow(ax2_image)    # ax3.cla()
+    # ax4.cla()
+ax3.imshow(ax3_image)
+ax4.imshow(ax4_image)
+
 device = torch.device("cpu")
 
-single_map, _, _, _ = env.state_action_reward_done()
+single_map, _, _, _, available_actions= env.state_action_reward_done(None)
 num_class = 4
 mask = np.ones((2,1))
 rnn_state = np.zeros((1,4,512))
@@ -195,90 +250,98 @@ for i in range(env.drone_num):
     grid_agents.append(0)
 
 action = np.empty(2)
+
+
+                
 for i_episode in range(1, num_episodes):
-    # 假设你的模型是actor_1，LayerNorm层名为feature_norm
-    # layer_norm_weight = actor_1.base.feature_norm.weight.detach().numpy()
-    # layer_norm_bias = actor_1.base.feature_norm.bias.detach().numpy()
-    #
-    # if prev_layer_norm_weight is not None and prev_layer_norm_bias is not None:
-    #     weight_changed = not np.allclose(prev_layer_norm_weight, layer_norm_weight)
-    #     bias_changed = not np.allclose(prev_layer_norm_bias, layer_norm_bias)
-    #
-    #     if weight_changed or bias_changed:
-    #         print("LayerNorm parameters changed!")
-    #     else:
-    #         print("LayerNorm parameters not changed.")
-    #
-    # prev_layer_norm_weight = layer_norm_weight
-    # prev_layer_norm_bias = layer_norm_bias
 
-    print(env.MC_iter)
+    # print("环境步",env.MC_iter)
     obs = np.array(obs)
-    # print("obs.shape",obs.shape)
-    # print("maks shape is", mask.shape)
+    # print("obs shape",obs.shape)
+    robot_pos = [env.drone_list[i].pos for i in range(env.drone_num)] # 两个机器人的位置
+    # available_actions = get_action(obs, robot_pos)
+    print(available_actions)
     for i, agent in enumerate(agents):
-        action[i], _, _,_= agent(np.expand_dims(obs[i], axis=0), rnn_state, mask[i])  # 每个智能体采用自己的状态做动作
-    print("pre - action is", action)
-    # action = torch.squeeze(action)
+        action[i], _, _,_= agent(np.expand_dims(obs[i], axis=0), rnn_state, mask[i], available_actions =  np.expand_dims(available_actions[i], axis=0))  # 每个智能体采用自己的状态做动作
+    # print("pre - action is", action)
     action = action.astype(int)
-    # one_hot_action = np.eye(num_class)[action]
     one_hot_action = action.reshape(-1,1)
-    print("one-hot", one_hot_action)
-    # print("obs grid each agent", env.find_grid_count)
-
-    # Rescue
+    obs, reward, done, info, _, _, ax2_image, available_actions= env.step(one_hot_action)
+    # print("reward is",reward)
+    ax1_image = env.get_full_obs()
+    
+    
+    # ax2_image = env.get_joint_obs(env.MC_iter)
+    # ax5_image = [np.ones((60, 60, 3)) * 0.5 for i in range(env.drone_num)]
+    # for i, obs_i in enumerate(obs):
+    #     ax5_image[i][np.where(obs_i)] = 0
+    
+    
     for i in range(env.drone_num):
-        grid_agents[i] = env.average_list_true[i]
-    # 分别记录两个agent没有探索出新地方的次数
-    print("grid agents",grid_agents)
-    for i in range(env.drone_num):
-        # if last_grid_agents[i] <= grid_agents[i] or grid_agents[i] <=0:
-        if grid_agents[i] <= 0:
-            agent_repetition[i] = agent_repetition[i] + 1
-        else:
-            agent_repetition[i] = 0
-    last_grid_agents = grid_agents.copy()
-
-    # 当 存在agent连续 5 次都没有探索到新地方的时候，触发rescue机制
-    # 将这个 agent 当前所在位置作为 rescue 的起始位置，之后使用 astar 规划到最近的 frontier 去
-    for i, repetition in enumerate(agent_repetition):
-        if repetition > reputation_threshold:
-            print("agent_id is", i)
-            # 下面这一行就是rescue algorithm
-            # resuce_action_list[i].actions, x, y = generate_path(env=env, id=i)
-            resuce_action_list[i].id = i
-            agent_repetition[i] = -10000
-
-    # generate_path(env=env,agent_repetition=agent_repetition)
-
-    # Clear the images
-
-    for i in range(env.drone_num):
-        if len(resuce_action_list[i].actions)>0:
-            # 取首个元素，然后删除，直到所有的元素全部删除，此时即到达A star 的目的地
-            # 多agents的rescue 用这个
-            # one_hot_action[i] = resuce_action_list[i].actions.pop(0)
-            # 单 agent的 rescue 用这个
-            one_hot_action = resuce_action_list[i].actions.pop(0)
-            resuce_flag = True
-            if len(resuce_action_list[i].actions) == 0:
-                agent_repetition[i] = 0
-            print("okok")
-        else:
-            resuce_flag = False
-
-    obs, reward, done, info, _, _ = env.step(one_hot_action)
-    print("reward is",reward)
+        # print(len(env.rescue_action_list[i].actions), "is len")
+        if len(env.rescue_action_list[i].actions) > 0:
+            ax1_image[env.goal_r[i], env.goal_c[i]] = [1, 0, 1]
+            # print(env.drone_list[i].path, "is path")
+            for j in range(len(env.rescue_action_list[i].actions)): 
+                ax1_image[env.drone_list[i].path[j][0], env.drone_list[i].path[j][1]] = [0.7, 0.1, 0.5]
+                
+            ax1_image[env.drone_list[i].pos[0], env.drone_list[i].pos[1]] =  [0.5 * i, 0, 0.5 * i]
+            
     if done[0] is True:
         ax1 = fig.add_subplot(gs[0:1, 0:1])
         ax2 = fig.add_subplot(gs[0:1, 1:2])
+        ax3 = fig.add_subplot(gs[1:2, 0:1])
+        ax4 = fig.add_subplot(gs[1:2, 1:2])
+        ax3.cla()
+        ax4.cla()
+        ax2_image = np.full((env.map_size, env.map_size, 3), 0.5)
+        # 重新初始化 ax3_image 和 ax4_image
+        ax3_image = np.ones((env.map_size, env.map_size, 3)) * 0.5
+        ax4_image = ax1_image
+        for i, drone in enumerate(env.drone_list):
+            ax4_image[drone.pos[0], drone.pos[1]] = [0 , 0.25 *i, 0] 
+
+        # print(done, ' is done!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11')
 
     ax1.cla()
     ax2.cla()
-    if resuce_flag:
-        ax1.plot(y, x, c='r', lw=2)
-    ax1.imshow(env.get_full_obs())
-    ax2.imshow(env.get_joint_obs(env.MC_iter))
-    # print("next_single_map", single_map[1])
+    ax3.cla()
+    ax4.cla()
+
+    
+    # 找到 ax2_image 中所有非 0.5 的元素的索引
+    indices = np.where(ax2_image != 0.5)
+    # 将 ax2_image 中对应位置的值赋给 ax3_image
+    ax3_image[indices] = ax2_image[indices]
+    for i in range(env.drone_num):
+        # print(len(env.rescue_action_list[i].actions), "is len")
+        if len(env.rescue_action_list[i].actions) > 0:
+            ax3_image[env.goal_r[i], env.goal_c[i]] = [1, 0, 1]
+            print(env.drone_list[i].path, "is path")
+            for j in range(len(env.rescue_action_list[i].actions)):
+                ax3_image[env.drone_list[i].path[j][0], env.drone_list[i].path[j][1]] = [0.7, 0.1, 0.5]
+                
+            ax3_image[env.drone_list[i].pos[0], env.drone_list[i].pos[1]] =  [0.5 * i, 0, 0.5 * i]
+    for i, drone in enumerate(env.drone_list):
+        if i ==0:
+            ax4_image[drone.pos[0], drone.pos[1]] = [0 , 1, 0]
+        elif i ==1:
+            ax4_image[drone.pos[0], drone.pos[1]] = [0 , 0, 1]
+      
+    # 画图
+      
+    ax1.imshow(ax1_image)
+    ax2.imshow(ax2_image)
+    ax3.imshow(ax3_image)
+    ax3.axis('off')
+    ax4.imshow(ax4_image)
     plt.pause(.2)
     plt.draw()
+    # while True:
+    #     user_input = input("请按 '空格' 或 'a' 键继续...")
+    #     if user_input in [' ', 'a']:
+    #         break
+
+
+
+

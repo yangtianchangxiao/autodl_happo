@@ -20,8 +20,7 @@ sys.path.append(r"/home/cx/happo/envs/EnvDrone/classic_control/")
 sys.path.append(r"d:\code/TRPO-in-MARL\envs\EnvDrone\classic_control/")
 sys.path.append(r"/home/cx/envs/EnvDrone/classic_control/")
 sys.path.append(r"/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/")
-reset_time = 0 # 记录环境测试次数
-total_test_map_num = 250 # 表示测试地图的总数
+
 
 
 from rescue_function import rescue_action
@@ -36,8 +35,8 @@ from PIL import Image
 class Drones(object):
     def __init__(self, pos, view_range, id, map_size):
         self.id = id
-        self.last_pos = [None, None]
         self.pos = pos
+        self.last_pos = [None, None]
         self.view_range = view_range
         self.area = None
         self.communicate_list = [] # 记录可以通信的名单
@@ -75,7 +74,6 @@ class Drones(object):
         # 有时候因为障碍物生成的不好，智能体会处在一个被障碍物包围的局面，这个时候就需要重开
         self.surrounded_flag = False
         self.collision_times = 0
-        self.path = None
 
 
 class Human(object):
@@ -214,7 +212,7 @@ class SearchGrid(gym.Env):
         # When use mlp
         # self.view_range = 10
         self.view_range = 5
-        self.run_time = 250
+        self.run_time = 10
         self.observation_space = spaces.Box(low=0, high=1, shape=(1 * 60 * 60,))
         self.share_observation_space = spaces.Box(low=0, high=1, shape=(1 * 60 * 60,))
         # When use cnn
@@ -227,7 +225,7 @@ class SearchGrid(gym.Env):
         self.seed()
         self.reset()
     def raise_difficulty(self):
-        self.run_time = self.run_time + 3
+        self.run_time = self.run_time + 10
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
@@ -254,16 +252,16 @@ class SearchGrid(gym.Env):
                 self.agent_repetition[i] = 0
                 self.agent_repetition_reward[i] = 0
         self.last_grid_agents = self.grid_agents.copy()
-                
-        if self.exploration_prop <= 1:
-            # print(self.agent_repetition, "agent_repetition")
+        
+        if self.exploration_prop <= self.generate_threshold:
+
             # 重复的阈值应当和探索面积的百分比有关, 但是先不管
             for i, repetition in enumerate(self.agent_repetition):
                 if repetition > self.repetition_threshold \
                     and self.drone_list[i].whole_map[1, self.drone_list[i].pos[0], self.drone_list[i].pos[1]]:
                     # 下面这一行就是rescue algorithm
                     # print("start rescue")
-                    self.drone_list[i].path, self.rescue_action_list[i].actions, self.goal_r[i], self.goal_c[i] = generate_path(env=self, id=i, free_zone = self.free_map_rescue, obstacle_map = self.joint_map[2])
+                    self.rescue_action_list[i].actions, self.goal_r[i], self.goal_c[i] = generate_path(env=self, id=i, free_zone = self.free_map_rescue, obstacle_map = self.joint_map[2])
                     self.rescue_action_list[i].id = i
                     self.agent_repetition[i] = -10000
                     # print("初始rescue")
@@ -276,7 +274,7 @@ class SearchGrid(gym.Env):
                     if all((self.drone_list[i].whole_map[1, self.goal_r[i], self.goal_c[i]] + self.drone_list[i].whole_map[3, self.goal_r[i], self.goal_c[i]]) > 0 for i in range(self.drone_num)) \
                         and self.drone_list[i].whole_map[1, self.drone_list[i].pos[0], self.drone_list[i].pos[1]] >0:
                         if self.rescue_target_keep_time_count < 1:
-                            self.drone_list[i].path, self.rescue_action_list[i].actions, self.goal_r[i], self.goal_c[i] = generate_path(env=self, id=i, free_zone = self.free_map_rescue, obstacle_map = self.joint_map[2])
+                            self.rescue_action_list[i].actions, self.goal_r[i], self.goal_c[i] = generate_path(env=self, id=i, free_zone = self.free_map_rescue, obstacle_map = self.joint_map[2])
                             self.rescue_action_list[i].id = i
                             self.agent_repetition[i] = -10000
                             # print("中间发现rescue的目标点已经被探索过了")
@@ -300,7 +298,7 @@ class SearchGrid(gym.Env):
         # 目标点初始化模块
         # pritn(self.generate_human is False,"generate_human is false")
         if self.exploration_prop >= self.generate_threshold and self.generate_human is False:
-            # print("过0.5, map is", self.random_index)
+            print("过0.5, map is", self.random_index)
             self.human_num = 6
             self.human_num_temp = 6
             self.human_num_copy = 6
@@ -308,7 +306,7 @@ class SearchGrid(gym.Env):
             explored_area = np.argwhere(self.joint_map[1] > 0)
             
             # 先不清除之前的记录了，严格按照论文的方法来
-            # # 清零重复探索的记录
+            # 清零重复探索的记录
             for i in range(self.drone_num):
                 self.agent_repetition[i] = 0
             # erase the old whole map[1]
@@ -395,8 +393,8 @@ class SearchGrid(gym.Env):
         self.human_take_action()
         self.human_step(self.human_act_list)
         # self.get_full_obs()
-        ax2_image = self.get_joint_obs(self.MC_iter)
-        observation, reward, done, info = self.state_action_reward_done(rescue_mask)
+        self.get_joint_obs(self.MC_iter)
+        observation, reward, done, info, self.available_actions = self.state_action_reward_done(rescue_mask)
         # # 是 使用 individual reward or shared reward
         #
         # reward = np.full_like(reward, np.mean(reward) * len(reward))  # 使用numpy的广播功能对所有奖励进行均值填充
@@ -418,8 +416,8 @@ class SearchGrid(gym.Env):
             self.joint_map_process[drone.pos[0], drone.pos[1]] = 5.5
         
         
-        # return observation, reward, done, info, self.joint_map.ravel(), rescue_mask, ax2_image
-        return observation, reward, done, info, self.joint_map_process.ravel(), rescue_mask, ax2_image
+        # return observation, reward, done, info, self.joint_map.ravel(), rescue_mask
+        return observation, reward, done, info, self.joint_map_process.ravel(), rescue_mask, self.available_actions
  
     def reset(self, *, seed: Optional[int] = None, return_info: bool = False,
               options: Optional[dict] = None):
@@ -429,7 +427,7 @@ class SearchGrid(gym.Env):
             print("error")
         self.get_joint_obs(self.MC_iter)
         self.last_drone_pos += [drone.pos for drone in self.drone_list]
-        observation, _, _, info = self.state_action_reward_done(None)
+        observation, _, _, info, self.available_actions = self.state_action_reward_done(None)
         # 使用列表推导式对每个观测值进行扁平化处理
         observation = [o.flatten() for o in observation]
         
@@ -464,12 +462,6 @@ class SearchGrid(gym.Env):
             # 获取机器人要执行的操作
             # 当评价多机时，用这个
             action = drone_act_list[k]
-            # print("what you action is", action)
-            # 当评价单机时，用这个。但是训练的时候，还是用上面的
-            # action = drone_act_list
-            # if max(action) == 0:
-            #     print("test is ")
-            #     continue
             # 根据操作计算出机器人的新位置
             if len(action) == 1: # 获取机器人要移动的方向
                 direction = action[0]
@@ -487,6 +479,7 @@ class SearchGrid(gym.Env):
             
             # 禁止撞击
             if self.land_mark_map[temp_pos[0], temp_pos[1]] > 0:
+                # print("available action is ", self.available_actions[0], direction)
                 self.collision[k] = 1
                 self.drone_list[k].collision_times += 1
                 # self.drone_list[k].pos = temp_pos # 有这个就不禁止撞击了
@@ -494,9 +487,9 @@ class SearchGrid(gym.Env):
                 if self.drone_list[k].whole_map[1, self.drone_list[k].pos[0], self.drone_list[k].pos[1]] > 0:
                     if self.drone_list[k].repetition_count > self.repetition_threshold_for_reward:
                         try:
-                            self.drone_list[k].path, action_list, goal_r, goal_c = generate_path(env=self, id=k, free_zone = self.free_map_rescue, obstacle_map = self.joint_map[2], pos = self.drone_list[k].pos)
+                            action_list, goal_r, goal_c = generate_path(env=self, id=k, free_zone = self.free_map_rescue, obstacle_map = self.joint_map[2], pos = self.drone_list[k].pos)
                             current_rescue_path_length =  len(action_list)
-                            self.drone_list[k].path, action_list, goal_r, goal_c = generate_path(env=self, id=k, free_zone = self.free_map_rescue, obstacle_map = self.joint_map[2], pos = temp_pos)
+                            action_list, goal_r, goal_c = generate_path(env=self, id=k, free_zone = self.free_map_rescue, obstacle_map = self.joint_map[2], pos = temp_pos)
                             if len(action_list) < current_rescue_path_length:
                                 self.drone_list[k].rescue_path_reduce_flag = True
                                 # print("好动作")
@@ -517,36 +510,6 @@ class SearchGrid(gym.Env):
         for i in range(self.human_num):
             self.human_act_list[i] = random.randint(0, 3)
 
-    # def human_step(self, human_act_list):
-    #     for k in range(self.human_num):
-    #         # print(self.human_init_pos)
-    #         # print([self.human_list[k].pos[0]-self.human_init_pos[k][0], self.human_list[k].pos[1]-self.human_init_pos[k][1]])
-    #         if human_act_list[k] == 0:
-    #             if self.human_list[k].pos[0] > 0 and (self.human_list[k].pos[0] - \
-    #                                                   self.human_init_pos[k][0] - 1 > -self.move_threshold):
-    #                 free_space = self.land_mark_map[self.human_list[k].pos[0] - 1, self.human_list[k].pos[1]]
-    #                 if free_space == 0:
-    #                     self.human_list[k].pos[0] = self.human_list[k].pos[0] - 1
-    #         elif human_act_list[k] == 1:
-    #             if self.human_list[k].pos[0] < self.map_size - 1 and (self.human_list[k].pos[0] - \
-    #                                                                   self.human_init_pos[k][
-    #                                                                       0] + 1 < self.move_threshold):
-    #                 free_space = self.land_mark_map[self.human_list[k].pos[0] + 1, self.human_list[k].pos[1]]
-    #                 if free_space == 0:
-    #                     self.human_list[k].pos[0] = self.human_list[k].pos[0] + 1
-    #         elif human_act_list[k] == 2:
-    #             if self.human_list[k].pos[1] > 0 and (self.human_list[k].pos[1] - \
-    #                                                   self.human_init_pos[k][1] - 1 > -self.move_threshold):
-    #                 free_space = self.land_mark_map[self.human_list[k].pos[0], self.human_list[k].pos[1] - 1]
-    #                 if free_space == 0:
-    #                     self.human_list[k].pos[1] = self.human_list[k].pos[1] - 1
-    #         elif human_act_list[k] == 3:
-    #             if self.human_list[k].pos[1] < self.map_size - 1 and (self.human_list[k].pos[1] - \
-    #                                                                   self.human_init_pos[k][
-    #                                                                       1] + 1 < self.move_threshold):
-    #                 free_space = self.land_mark_map[self.human_list[k].pos[0], self.human_list[k].pos[1] + 1]
-    #                 if free_space == 0:
-    #                     self.human_list[k].pos[1] = self.human_list[k].pos[1] + 1
 
     def human_step(self, human_act_list):
         for k in range(self.human_num):
@@ -945,7 +908,7 @@ class SearchGrid(gym.Env):
         # reward = 0  # 合作任务，只设置单一奖励
         # reward_list = np.zeros(self.drone_num, dtype=np.float32)
         ####################设置奖励的增益
-        target_factor = 300  # 发现目标点的奖励系数
+        target_factor = 0  # 发现目标点的奖励系数
         # 发现障碍物的奖励系数
         information_gain = 0.1
         # time step factor 变成 0, 取消时间惩罚
@@ -989,6 +952,17 @@ class SearchGrid(gym.Env):
         # for i in range(self.drone_num):   #这里可以做智能信用分配
         #     reward += self.compute_reward(self.drone_list[i])
         done = False
+        
+        self.available_actions = np.ones((self.drone_num, 4))
+        # 检查每个pos的四个方向是否有障碍物，如果有，就将对应的avaliable action置为0
+        # delta = [np.array([-1, 0]), np.array([1, 0]), np.array([0, -1]), np.array([0, 1])]
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Up, Down, Left, Right
+        for i in range(self.drone_num):
+            x, y = self.drone_list[i].pos
+            for d, (dx, dy) in enumerate(directions):
+                if self.land_mark_map[x+dx, y+dy] > 0:
+                    self.available_actions[i, d] = 0
+        
         single_map_set = [self.drone_list[k].whole_map for k in range(self.drone_num)]
         # 压缩状态空间
         # single_map_set = [self.drone_list[k].whole_map[1:].copy() for k in range(dself.drone_num)]
@@ -1000,16 +974,15 @@ class SearchGrid(gym.Env):
             self.drone_list[drone_count].map_processed[0][each_map[2] > 0] = 1
             # 整合智能体自己的位置到最终的地图里
             drone_pos = self.drone_list[drone_count].pos
-            # last_drone_pos = self.drone_list[drone_count].last_pos[0]
-            # last_last_drone_pos = self.drone_list[drone_count].last_pos[1]
-            # if last_last_drone_pos is not None:
-            #     self.drone_list[drone_count].map_processed[0][last_last_drone_pos[0], last_last_drone_pos[1]] = -6.5
-            # if last_drone_pos is not None:
-            #     self.drone_list[drone_count].map_processed[0][last_drone_pos[0], last_drone_pos[1]] = -5.5
+            last_drone_pos = self.drone_list[drone_count].last_pos[0]
+            last_last_drone_pos = self.drone_list[drone_count].last_pos[1]
+            if last_last_drone_pos is not None:
+                self.drone_list[drone_count].map_processed[0][last_last_drone_pos[0], last_last_drone_pos[1]] = -6.5
+            if last_drone_pos is not None:
+                self.drone_list[drone_count].map_processed[0][last_drone_pos[0], last_drone_pos[1]] = -5.5
             self.drone_list[drone_count].map_processed[0][drone_pos[0], drone_pos[1]] = -4.5
-            # self.drone_list[drone_count].last_pos[1] = last_drone_pos
-            # self.drone_list[drone_count].last_pos[0] = drone_pos
-            
+            self.drone_list[drone_count].last_pos[1] = last_drone_pos
+            self.drone_list[drone_count].last_pos[0] = drone_pos
             # 整合其他智能体的位置到最终的地图里
             self.drone_list[drone_count].map_processed[0][each_map[3] > 0] = 5.5
 
@@ -1037,7 +1010,8 @@ class SearchGrid(gym.Env):
             # self.average_list_true[i] = self.average_list[i] = max(self.find_grid_count[i] - self.last_find_grid_cout[i] \
             #                         - self.drone_list[i].grid_communication , 0)
 
-            self.average_list_true[i] = self.average_list[i] = self.drone_list[i].find_grid_count 
+            self.average_list_true[i] = self.average_list[i] = self.drone_list[i].find_grid_count + information_gain * self.drone_list[i].open_information_gain
+
 
             # print("average_list", i, "is", self.average_list[i])
             # print("agent",i,"new area reward", self.average_list[i] * average_time_stamp_factor)
@@ -1092,11 +1066,9 @@ class SearchGrid(gym.Env):
         if self.human_num == 0 and self.generate_human is True:
             # reward_list = list(map(lambda x: x + 500, reward_list))
             done = True
-            # print("Map index is", self.random_index)
-            global reset_time
-            print("Map index is", reset_time)
-            # with open ("/home/cx/happo/envs/EnvDrone/classic_control/map_index8.txt","a") as w:
-            #     w.write(str(self.random_index)+"\n")
+            print("Map index is", self.random_index)
+            with open ("/home/cx/happo/envs/EnvDrone/classic_control/map_index8.txt","a") as w:
+                w.write(str(self.random_index)+"\n")
             # info['0'] = "find all target"
 
         # 机器人碰撞惩罚，坚持越久，惩罚越轻
@@ -1148,32 +1120,14 @@ class SearchGrid(gym.Env):
             # info['0'] = "exceed run time"
         
         if done is True or self.time_stamp > self.run_time:
-
-
-            happo_cu_data_dir = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_cu_data.txt"
-            frontier_dir = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/frontier.txt"
-            happo_cu_data_dir_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_cu_data_dynamic.txt"
-            frontier_dir_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/frontier_dynamic.txt"
-            frontier_dir_dynamic_2 = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/frontier_dynamic_2.txt"
-            happo_no_cu_collision = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_collision.txt"
-            happo_no_cu_no_collision_200 = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_no_collision_200.txt"
-            with open(happo_no_cu_no_collision_200, "a") as w:
-                w.write("targets_fetched: " + str(self.human_num_copy - self.human_num) + "\n")
-                if self.human_num == 0:
-                    w.write("complete: True\n")
-                else:
-                    w.write("complete: False\n")
-                w.write("total_time: " + str(self.time_stamp) + "\n")
-                w.write("\n")  # 添加额外的换行，用于分隔每个环境的数据
-            print("完成了第", reset_time, "次地图的探索")
-            
+            # print("self.human_num_copy-self.human_num", target_found_num)
+            # if self.MC_iter > 300:
+            #     print("self.MC iter", self.MC_iter)
+            #     print("env num is", self.random_index)
+            # if target_found_num > 0:
+            #     print("Find targets: ", target_found_num)
             self.reset()
-            reset_time = reset_time + 1
-            global total_test_map_num
-            if reset_time > total_test_map_num:
-                sys.exit(0)
-                print("已经完成了所有地图的探索")
-                
+
         if self.rescue_flag is True:
             for i_rescue in range(self.drone_num):
                 if rescue_masks[i_rescue] != 1:
@@ -1184,7 +1138,7 @@ class SearchGrid(gym.Env):
        
         done_list = [done]*self.drone_num
 
-        return final_single_map_set, reward_list, done_list, target_found_num
+        return final_single_map_set, reward_list, done_list, target_found_num, self.available_actions
 
 
     def get_neighboring_free_spaces(self, pos: Tuple[int, int], free_spaces: List[Tuple[int, int]], distance: int) -> \
@@ -1266,6 +1220,7 @@ class SearchGrid(gym.Env):
         self.offsets = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # 上下左右四个方向的偏移
         self.map_size = 60
         self.drone_num = 2
+        self.available_actions = np.ones((self.drone_num, 4))
         # Rescue paragrams
         # 已探索区域的比例
         self.exploration_prop = 0
@@ -1289,9 +1244,9 @@ class SearchGrid(gym.Env):
         self.last_grid_agents = np.zeros(self.drone_num)
         self.agent_repetition = np.zeros(self.drone_num)
         self.agent_repetition_reward = np.zeros(self.drone_num)
-        self.repetition_threshold = 14 # 基础款MIXER里用的是5
-        self.repetition_threshold_for_reward = 1000
-        self.rescue_flag = False
+        self.repetition_threshold = 10000 # 基础款MIXER里用的是5
+        self.repetition_threshold_for_reward = 1000 if self.run_time <50 else 2 # 用于指导智能体从死胡同等不好的地方出来
+        self.rescue_flag = Falseself
         # The area explored by each agent each step
         self.average_list = [0] * self.drone_num
         self.average_list_true = [0] * self.drone_num
@@ -1304,11 +1259,9 @@ class SearchGrid(gym.Env):
         
         self.human_init_pos = []
         # 一开始不生成目标点，探索范围过了阈值之后再生成
-        
-        # 静态目标点
-        self.generate_human = True   
-        self.generate_threshold = 1
-        self.human_num = 6
+        self.generate_human = False
+        self.generate_threshold = 0.5
+        self.human_num = 0
         self.human_num_temp = self.human_num
         self.human_num_copy = self.human_num
         self.sensing_threshold = [3, 5]
@@ -1340,9 +1293,7 @@ class SearchGrid(gym.Env):
         self.collision = np.zeros(self.drone_num) # 记录which drone take an action that will cause collision
         self.random_index = np.random.randint(0, self.map_num)
         self.erosion_prob = 0
-        global reset_time
-        print("reset_time is", reset_time)
-        self.choose_map = self.map_set[reset_time]
+        self.choose_map = self.map_set[self.random_index]
         # 使用 NumPy 切片，隔一个采样一个
         self.choose_map = self.choose_map[::2, ::2]
         # self.choose_map = self.get_Map()

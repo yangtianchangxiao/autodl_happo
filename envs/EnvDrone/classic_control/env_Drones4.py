@@ -16,7 +16,7 @@ from collections import deque
 import os
 import pickle
 import sys
-from numba import njit, vectorize
+# from numba import njit, vectorize
 
 sys.path.append(r"/home/cx/happo/envs/EnvDrone/classic_control/")
 sys.path.append(r"d:\code/TRPO-in-MARL\envs\EnvDrone\classic_control/")
@@ -53,7 +53,7 @@ class Drones(object):
         self.whole_map = np.zeros((4, 120, 120), dtype=np.float16)  # 每个机器人保存一个本地地图
         self.whole_map[1,pos[0],pos[1]] = 1 
         self.map_processed = 0.5 * np.ones((1, 120, 120), dtype=np.float16) # 将多个不同特征的地图融合到一张上
-        self.map_condensed = np.zeros((1, 120, 120))
+        self.map_condensed = np.zeros((1, 60, 60))
         
         self.last_whole_map = None
         self.grid_communication = 0
@@ -80,6 +80,7 @@ class Drones(object):
         self.action_list = []
         self.path = None   
         self.map_condense_degree = 0
+        self.local_view_map = 0.5 * np.ones((2 * self.view_range - 1, 2 * self.view_range - 1), dtype=np.float16)
 
 
 class Human(object):
@@ -149,8 +150,8 @@ class SearchGrid(gym.Env):
         # self.view_range = 10
         self.view_range = 5
 
-        self.observation_space = spaces.Box(low=0, high=1, shape=(1 * 60 * 60,))
-        self.share_observation_space = spaces.Box(low=0, high=1, shape=(1 * 60 * 60,))
+        self.observation_space = spaces.Box(low=0, high=1, shape=(1 * 60 * 60+9*9,)) # 60*60是全局地图的大小，9*9是局部地图的大小
+        self.share_observation_space = spaces.Box(low=0, high=1, shape=(1 * 60 * 60+9*9,))
         # When use cnn
         # self.observation_space = spaces.Box(low=0, high=1, shape=(4, 50, 50,))
         # self.share_observation_space = spaces.Box(low=0, high=1, shape=(3, 50, 50,))
@@ -167,7 +168,7 @@ class SearchGrid(gym.Env):
 
     def step(self, action):
         self.MC_iter = self.MC_iter + 1
-        print("MC_iter", self.MC_iter)
+        # print("MC_iter", self.MC_iter)
         explored_acreage = np.count_nonzero(self.joint_map[1])
         self.exploration_prop = explored_acreage /self.free_acreage
         
@@ -353,9 +354,9 @@ class SearchGrid(gym.Env):
         
         # 对single_map 和 joint_map进行处理：
         
-        observation = [o.flatten() for o in observation]  # 使用列表推导式对每个观测值进行扁平化处理
+        observation = [np.concatenate((o.flatten(), drone.local_view_map.flatten())) for o, drone in zip(observation, self.drone_list)] # 使用列表推导式对每个观测值进行扁平化处理
         
-        self.joint_map_process = 0.5 * np.ones(120,120)
+        self.joint_map_process = 0.5 * np.ones((120,120))
         
         # 整合 open grid 到 joint_map 里
         # open grid 最终的值在 0~0.3 之间
@@ -372,7 +373,7 @@ class SearchGrid(gym.Env):
             division_factor = 2
             map_processed = self.joint_map_process
             reshaped_map = map_processed.reshape(map_processed.shape[0]//division_factor, division_factor, -1, division_factor).swapaxes(1, 2)
-            self.joint_map_process = self.encode(reshaped_map[..., 0], reshaped_map[..., 1], reshaped_map[..., 2], reshaped_map[..., 3])           
+            self.joint_map_process = self.encode(reshaped_map[..., 0, 0], reshaped_map[..., 0, 1], reshaped_map[..., 1, 0], reshaped_map[..., 1, 1])           
         else:
             division_factor = 2
             map_size = self.map_size // division_factor
@@ -386,9 +387,12 @@ class SearchGrid(gym.Env):
             else:  # 第四象限
                 quadrant_map = self.joint_map_process[map_size:, map_size:]
             self.joint_map_process = quadrant_map
-            
+        
+        drone_mean_local = np.mean([drone.local_view_map for drone in self.drone_list], axis=0)
+        
+        final_joint_map = np.concatenate((self.joint_map_process.ravel(), drone_mean_local.ravel()), axis=0)
         # return observation, reward, done, info, self.joint_map.ravel(), rescue_mask
-        return observation, reward, done, info, self.joint_map_process.ravel(), rescue_mask, ax2_image
+        return observation, reward, done, info, final_joint_map, rescue_mask, ax2_image
  
     def reset(self, *, seed: Optional[int] = None, return_info: bool = False,
               options: Optional[dict] = None):
@@ -402,9 +406,11 @@ class SearchGrid(gym.Env):
         self.last_drone_pos += [drone.pos for drone in self.drone_list]
         observation, _, _, info = self.state_action_reward_done(None)
         # 使用列表推导式对每个观测值进行扁平化处理
-        observation = [o.flatten() for o in observation]
+        observation = [np.concatenate((o.flatten(), drone.local_view_map.flatten())) for o, drone in zip(observation, self.drone_list)] # 使用列表推导式对每个观测值进行扁平化处理
         
         
+        
+                
         # 整合 open grid 到 joint_map 里
         # open grid 最终的值在 0~0.3 之间
         self.joint_map_process[self.joint_map[1] > 0] = 1 - self.joint_map[1][self.joint_map[1] > 0]
@@ -414,10 +420,33 @@ class SearchGrid(gym.Env):
         for drone in self.drone_list:
             self.joint_map_process[drone.pos[0], drone.pos[1]] = 5.5
         
-
         
+        # 压缩或者截取 joint_map
+        if np.any(self.drone_list[i].map_condense_degree == 1 for i in range(self.drone_num)):
+            division_factor = 2
+            map_processed = self.joint_map_process
+            reshaped_map = map_processed.reshape(map_processed.shape[0]//division_factor, division_factor, -1, division_factor).swapaxes(1, 2)
+            self.joint_map_process = self.encode(reshaped_map[..., 0, 0], reshaped_map[..., 0, 1], reshaped_map[..., 1, 0], reshaped_map[..., 1, 1])           
+        else:
+            division_factor = 2
+            map_size = self.map_size // division_factor
+            # 判断象限并提取60x60的区域  
+            if np.any(self.drone_list[i].pos[0] < map_size and self.drone_list[i].pos[1] < map_size for i in range(self.drone_num)):  # 第一象限
+                quadrant_map = self.joint_map_process[:map_size, :map_size]
+            elif np.any(self.drone_list[i].pos[0] < map_size and self.drone_list[i].pos[1] >= map_size for i in range(self.drone_num)):  # 第二象限
+                quadrant_map = self.joint_map_process[:map_size, map_size:]
+            elif np.ary(self.drone_list[i].pos[0] >= map_size and self.drone_list[i].pos[1] < map_size for i in range(self.drone_num)):  # 第三象限
+                quadrant_map = self.joint_map_process[map_size:, :map_size]
+            else:  # 第四象限
+                quadrant_map = self.joint_map_process[map_size:, map_size:]
+            self.joint_map_process = quadrant_map
+        
+        
+        drone_mean_local = np.mean([drone.local_view_map for drone in self.drone_list], axis=0)
+        final_joint_map = np.concatenate((self.joint_map_process.ravel(), drone_mean_local.ravel()), axis=0)
+
         # return observation, self.joint_map.flatten()
-        return observation, self.joint_map_process.flatten()
+        return observation, final_joint_map
 
         # return (observation[0])
 
@@ -745,6 +774,8 @@ class SearchGrid(gym.Env):
 
         # 计算新找的了多少个区域
         drone.find_grid_count = 0
+        # 刷新local_view_map
+        drone.local_view_map = np.ones((obs_size, obs_size)) * 0.5
         for i in range(obs_size):
             for j in range(obs_size):
                 x = i + drone.pos[0] - drone.view_range + 1
@@ -758,7 +789,8 @@ class SearchGrid(gym.Env):
                         drone.repetition_flag =  False
                         drone.find_grid_count = drone.find_grid_count + 1
                     drone.open_information_gain = drone.open_information_gain + 1 - drone.whole_map[1, x, y]
-                    drone.whole_map[1, x, y] = 1
+                    drone.whole_map[1, x, y] = 1 
+                    drone.local_view_map[i, j] = 0 # 局部观测地图，添加open grid
                     # print("droe.coord_per_obs shape",drone.coord_per_obs.shape)
                     drone.coord_per_obs[coord_per_obs_length] = (x, y)
                     coord_per_obs_length = coord_per_obs_length + 1
@@ -834,6 +866,7 @@ class SearchGrid(gym.Env):
                                 # self.obstacle_multi_agent[k].append([x,y])
                                 self.obstacles.append([x, y])  # 所有机器人观测过的障碍物
                             self.drone_list[k].whole_map[3, x, y] = 1  # add obstacle information to each agent's whole map
+                            self.drone_list[k].local_view_map[i, j] = 1 # 局部观测地图，添加障碍物
                             # self.joint_map[2, x, y] = 1
                         # 如果观测中有目标，则清除被观测到的目标
                         if all(obs[x, y] == [1, 0, 0]):
@@ -890,7 +923,7 @@ class SearchGrid(gym.Env):
         # self.joint_map[2] = np.max([drone.whole_map[3] for drone in self.drone_list], axis=0)
         return obs
 
-    @vectorize
+    # @vectorize
     def encode(self, v1, v2, v3, v4):
         return (v1 * 3**3 + v2 * 3**2 + v3 * 3 + v4) / (3**4 - 1)
     def condense_map(self, drone, soft_boundary=0, division_factor=2):
@@ -910,7 +943,13 @@ class SearchGrid(gym.Env):
         if drone.map_condense_degree == 1:
             map_processed = drone.map_processed[0]
             reshaped_map = map_processed.reshape(map_processed.shape[0]//division_factor, division_factor, -1, division_factor).swapaxes(1, 2)
-            condensed_map = self.encode(reshaped_map[..., 0], reshaped_map[..., 1], reshaped_map[..., 2], reshaped_map[..., 3])
+            condensed_map = self.encode(
+                reshaped_map[..., 0, 0],  # First value of the last two dimensions
+                reshaped_map[..., 0, 1],  # Second value of the penultimate dimension
+                reshaped_map[..., 1, 0],  # First value of the last dimension, second value of the penultimate dimension
+                reshaped_map[..., 1, 1]   # Second value of the last two dimensions
+)            
+            
             drone.map_condensed[0] = condensed_map
         else:
             # 获取智能体位置
@@ -953,6 +992,7 @@ class SearchGrid(gym.Env):
 
         done = False
         single_map_set = [self.drone_list[k].whole_map for k in range(self.drone_num)]
+        
         # 压缩状态空间
         # single_map_set = [self.drone_list[k].whole_map[1:].copy() for k in range(dself.drone_num)]
         single_map_set = [drone.whole_map for drone in self.drone_list]
@@ -1081,7 +1121,7 @@ class SearchGrid(gym.Env):
                         (0 <= opposite_x2 < self.land_mark_map.shape[0] and 0 <= opposite_y2 < self.land_mark_map.shape[1] and self.land_mark_map[opposite_x2, opposite_y2] <= 0):
                             # 对应方向的grid存在障碍物，且相反方向的两个格子都不是障碍物，减少相应的奖励
                             reward_list[drone.id] -= close_penalty
-                            print('!!!!!!!!!!!! drone {} is close to obstacle'.format(drone.id))
+                            # print('!!!!!!!!!!!! drone {} is close to obstacle'.format(drone.id))
                         # break
         # 时间用尽但是还没有完成任务的惩罚
         if self.time_stamp > self.run_time:  # 超时
@@ -1186,7 +1226,7 @@ class SearchGrid(gym.Env):
     def init_param(self):
         self.MC_iter = 0
         self.target_occur_iter = 100
-        self.run_time = 65 # 10 25 40 45 55 65 75 100 110 140 200 Run run_time steps per game 当不禁止碰撞的时候，我用的参数是1000
+        self.run_time = 100 # 10 25 40 45 55 65 75 100 110 140 200 Run run_time steps per game 当不禁止碰撞的时候，我用的参数是1000
         self.offsets = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # 上下左右四个方向的偏移
         self.map_size = 120
         self.drone_num = 2
@@ -1213,7 +1253,7 @@ class SearchGrid(gym.Env):
         self.last_grid_agents = np.zeros(self.drone_num)
         self.agent_repetition = np.zeros(self.drone_num)
         self.agent_repetition_reward = np.zeros(self.drone_num)
-        self.repetition_threshold = 1 # 基础款MIXER里用的是5
+        self.repetition_threshold = 10000 # 基础款MIXER里用的是5
         self.repetition_threshold_for_reward = 10000 # 用于指导智能体从死胡同等不好的地方出来
         self.rescue_flag = False
         # The area explored by each agent each step
@@ -1490,4 +1530,3 @@ class SearchGrid(gym.Env):
             map[erosion_mask] = 1
 
         return map
-
