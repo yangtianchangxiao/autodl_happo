@@ -1246,7 +1246,7 @@ class SearchGrid(gym.Env):
         self.agent_repetition_reward = np.zeros(self.drone_num)
         self.repetition_threshold = 10000 # 基础款MIXER里用的是5
         self.repetition_threshold_for_reward = 1000 if self.run_time <50 else 2 # 用于指导智能体从死胡同等不好的地方出来
-        self.rescue_flag = Falseself
+        self.rescue_flag = False
         # The area explored by each agent each step
         self.average_list = [0] * self.drone_num
         self.average_list_true = [0] * self.drone_num

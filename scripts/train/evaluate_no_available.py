@@ -38,8 +38,10 @@ frontier_dir_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_cont
 frontier_dir_dynamic_2 = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/frontier_dynamic_2.txt"
 happo_no_cu_collision = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_collision.txt"
 happo_no_cu_no_collision_200 = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_no_collision_200.txt"
-with open(happo_no_cu_no_collision_200, "w") as f:
-    pass
+happo_no_cu_collision_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_collision_dynamic.txt"
+happo_no_cu_no_collision_200_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_no_collision_200_dynamic.txt"
+# with open(happo_no_cu_no_collision_200_dynamic, "w") as f:
+#     pass
 
 num_episodes = 50000  # 一共运行 200 个 episode
 record_fre = 10000  # 100 个 episode 记录一次
@@ -68,10 +70,10 @@ env = search_grid.SearchGrid(map_set=data, map_num=map_num)
 # 9 for resnet_attention and use rescue reward from beginning
             
 
-# path0 = r"/home/ubuntu/autodl_one_layer/mappo_model/happo_57_1/actor_agent0.pt"
-# path1 = r"/home/ubuntu/autodl_one_layer/mappo_model/happo_57_1/actor_agent1.pt"
-path0 = r"/home/ubuntu/autodl_one_layer/mappo_model/happo_57_7/actor_agent_copy0.pt"
-path1 = r"/home/ubuntu/autodl_one_layer/mappo_model/happo_57_7/actor_agent_copy1.pt"
+path0 = r"/home/ubuntu/autodl_one_layer/mappo_model/happo_57_1/actor_agent0.pt"
+path1 = r"/home/ubuntu/autodl_one_layer/mappo_model/happo_57_1/actor_agent1.pt"
+# path0 = r"/home/ubuntu/autodl_one_layer/mappo_model/happo_57_8/actor_agent0.pt"
+# path1 = r"/home/ubuntu/autodl_one_layer/mappo_model/happo_57_8/actor_agent1.pt"
 prev_layer_norm_weight = None
 prev_layer_norm_bias = None
 
@@ -219,11 +221,15 @@ def get_action(obs, robot_pos):   #将状态输入模型得到动作
 obs, _ = env.reset()
 ax3_image = obs
 fig = plt.figure()
-gs = GridSpec(2, 2, figure=fig)
+gs = GridSpec(1, 4, figure=fig)
 ax1 = fig.add_subplot(gs[0:1, 0:1])
 ax2 = fig.add_subplot(gs[0:1, 1:2])
-ax3 = fig.add_subplot(gs[1:2, 0:1])
-ax4 = fig.add_subplot(gs[1:2, 1:2])
+ax3 = fig.add_subplot(gs[0:1, 2:3])
+ax4 = fig.add_subplot(gs[0:1, 3:4])
+# 创建一个新的 figure 对象用于 ax3_image_copy
+fig2 = plt.figure()  # 这创建了一个新的 figure
+ax3_copy = fig2.add_subplot(1, 1, 1)  # 这在 figure 上创建了一个新的 axes 对象
+
 
 ax1_image = env.get_full_obs()
 ax2_image = env.get_joint_obs(env.MC_iter) 
@@ -238,6 +244,10 @@ indices = np.where(ax2_image != 0.5)
 
 # 将 ax2_image 中对应位置的值赋给 ax3_image
 ax3_image[indices] = ax2_image[indices]
+
+
+
+
 
 ax1.imshow(ax1_image)
 ax2.imshow(ax2_image)    # ax3.cla()
@@ -294,18 +304,24 @@ for i_episode in range(1, num_episodes):
         if len(env.rescue_action_list[i].actions) > 0:
             ax1_image[env.goal_r[i], env.goal_c[i]] = [1, 0, 1]
             # print(env.drone_list[i].path, "is path")
-            for j in range(len(env.rescue_action_list[i].actions)): 
+            path_length = len(env.drone_list[i].path)
+
+            for j in range(path_length - len(env.rescue_action_list[i].actions), path_length): 
                 ax1_image[env.drone_list[i].path[j][0], env.drone_list[i].path[j][1]] = [0.7, 0.1, 0.5]
                 
-            ax1_image[env.drone_list[i].pos[0], env.drone_list[i].pos[1]] =  [0.5 * i, 0, 0.5 * i]
+            ax1_image[env.drone_list[i].pos[0], env.drone_list[i].pos[1]] =  [0.5, 0, 0.5 ]
             
+
     if done[0] is True:
         ax1 = fig.add_subplot(gs[0:1, 0:1])
         ax2 = fig.add_subplot(gs[0:1, 1:2])
-        ax3 = fig.add_subplot(gs[1:2, 0:1])
-        ax4 = fig.add_subplot(gs[1:2, 1:2])
+        ax3 = fig.add_subplot(gs[0:1, 2:3])
+        ax4 = fig.add_subplot(gs[0:1, 3:4])
+        ax3_copy = fig2.add_subplot(1, 1, 1)  # 这在 figure 上创建了一个新的 axes 对象
         ax3.cla()
         ax4.cla()
+        ax3_copy.cla()
+        
         ax2_image = np.full((env.map_size, env.map_size, 3), 0.5)
         # 重新初始化 ax3_image 和 ax4_image
         ax3_image = np.ones((env.map_size, env.map_size, 3)) * 0.5
@@ -319,12 +335,14 @@ for i_episode in range(1, num_episodes):
     ax2.cla()
     ax3.cla()
     ax4.cla()
-
+    
     
     # 找到 ax2_image 中所有非 0.5 的元素的索引
     indices = np.where(ax2_image != 0.5)
     # 将 ax2_image 中对应位置的值赋给 ax3_image
     ax3_image[indices] = ax2_image[indices]
+
+    
     for i in range(env.drone_num):
         # print(len(env.rescue_action_list[i].actions), "is len")
         if len(env.rescue_action_list[i].actions) > 0:
@@ -333,6 +351,7 @@ for i_episode in range(1, num_episodes):
                 ax3_image[env.drone_list[i].path[j][0], env.drone_list[i].path[j][1]] = [0.7, 0.1, 0.5]
                 
             ax3_image[env.drone_list[i].pos[0], env.drone_list[i].pos[1]] =  [0.5 * i, 0, 0.5 * i]
+        
     for i, drone in enumerate(env.drone_list):
         if i ==0:
             ax4_image[drone.pos[0], drone.pos[1]] = [0 , 1, 0]
@@ -340,14 +359,27 @@ for i_episode in range(1, num_episodes):
             ax4_image[drone.pos[0], drone.pos[1]] = [0 , 0, 1]
       
     # 画图
-      
-    # ax1.imshow(ax1_image)
-    # ax2.imshow(ax2_image)
-    # ax3.imshow(ax3_image)
-    # ax3.axis('off')
-    # ax4.imshow(ax4_image)
-    # plt.pause(.2)
-    # plt.draw()
+    # 找到 ax1_image 中所有 human 的元素的索引: [1, 0, 0]
+    indices = np.where(np.all(ax1_image == [1, 0, 0], axis=-1))
+    # print("indices is ", indices)
+    ax3_image_copy = ax3_image.copy()
+    ax3_image_copy[indices] = [1, 0, 0]
+    
+    ax1.imshow(ax1_image)
+    ax2.imshow(ax2_image)
+    ax3.imshow(ax3_image_copy)
+    ax3.axis('off')
+    ax4.imshow(ax4_image)
+    plt.pause(.2)
+    plt.draw()
+    
+
+
+    ax3_copy.imshow(ax3_image_copy)  # 这在新的 axes 对象上显示 ax3_image_copy
+    ax3_copy.axis('off')  # 这在新的 axes 对象上关闭了坐标轴
+
+    plt.draw()  # 这会更新图像显示
+
     # while True:
     #     user_input = input("请按 '空格' 或 'a' 键继续...")
     #     if user_input in [' ', 'a']:

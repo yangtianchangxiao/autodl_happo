@@ -6,6 +6,7 @@ from algorithms.utils.mlp import MLPBase
 from algorithms.utils.rnn import RNNLayer
 from algorithms.utils.act import ACTLayer
 from algorithms.utils.mixer_layer import MixerBase
+from algorithms.utils.resnet_attention import Attention_model as AttentionBase
 from utils.util import get_shape_from_obs_space
 
 
@@ -36,6 +37,8 @@ class Actor(nn.Module):
             print("MLPBase")
         elif args.nn_type == 'mixer':
             base = MixerBase
+        elif args.nn_type == 'attention_resnet':
+            base = AttentionBase
         self.base = base(args, obs_shape)
 
         if self._use_naive_recurrent_policy or self._use_recurrent_policy:

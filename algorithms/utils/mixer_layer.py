@@ -51,7 +51,7 @@ class MixerLayer(nn.Module):
 
 class MixerBase2(nn.Module):
     def __init__(self, args, obs_shape, cat_self=True, attn_internal=False):
-        super(MixerBase, self).__init__()
+        super().__init__()
 
         self._use_feature_normalization = args.use_feature_normalization
         self._use_orthogonal = args.use_orthogonal
@@ -90,13 +90,38 @@ class MixerBase2(nn.Module):
     
     
 class PatchEmbedding(nn.Module):
-    def __init__(self, patch_size, in_channels, embed_dim):
+    def __init__(self, patch_size, in_channels, embed_dim, stride_data):
         super().__init__()
-        self.proj = nn.Conv2d(in_channels, embed_dim, kernel_size=patch_size, stride=patch_size)
+        # 默认是 3*3 的卷积核，strid=1
+        # (60-3)/1 = 58
+        # self.proj = nn.Conv2d(in_channels, embed_dim, kernel_size=patch_size, stride=stride_data)
+        # self.proj3 = nn.Conv2d(3, embed_dim, kernel_size=patch_size, stride=patch_size)
+        # self.proj4 = nn.Conv2d(4, embed_dim, kernel_size=patch_size, stride=patch_size)
+        self.proj1 = nn.Conv2d(in_channels=1, out_channels=8, kernel_size=3, stride=1)
+        self.proj8 = nn.Conv2d(in_channels=8, out_channels=32, kernel_size=5, stride=2)
 
+        self.activate = nn.LeakyReLU(inplace= True)
+        # # 58/2 = 29
+        self.maxpool2 = nn.AvgPool2d(kernel_size=2, stride=2)  
+        self.maxpool3 = nn.AvgPool2d(kernel_size=3, stride=2)   
     def forward(self, x):
-        x = self.proj(x)  # (batch_size, embed_dim, num_patches^(1/2), num_patches^(1/2))
-        x = x.flatten(2)  # (batch_size, embed_dim, num_patches)
+        # if x.shape[1] == 3:
+        #     x = self.proj3(x)  # (batch_size, embed_dim, num_patches^(1/2), num_patches^(1/2))
+        # else:
+        #     x = self.proj4(x)
+        # 30
+        # (60-3)/1+1 = 58
+        x = self.proj1(x)
+        x = self.activate(x)
+        x = self.maxpool2(x) # 29，29
+        # print("x.shape", x.shape)
+        x = self.proj8(x) # (29-5)/2 + 1= 13
+        x = self.activate(x)
+        x = self.maxpool3(x) #(13-3)/2 + 1  = 6
+        # print("x.shape2 is", x.shape)
+        x = x.flatten(2)
+        # print("x.shape3 is", x.shape)
+        # (batch_size, embed_dim, num_patches)
         # print("x.shape",x.shape)
         # # x = x.transpose(1, 2)  # (batch_size, num_patches, embed_dim)
         # print(x.shape)
@@ -113,6 +138,7 @@ class MixerBase(nn.Module):
         in_channels = args.in_channels
         # Hidden_dim is acutally the embed_dim.
         hidden_dim = args.hidden_dim
+        stride = args.stride
     
         # This is hidden_size is the size of final selet network
         output_dim = args.hidden_size
@@ -129,8 +155,10 @@ class MixerBase(nn.Module):
         
         init_method = [nn.init.xavier_uniform_, nn.init.orthogonal_][use_orthogonal]
         
-        self.patch_embed = PatchEmbedding(patch_size, in_channels, hidden_dim)
-        total_num_batch = int((60/patch_size)**2) # If 60 could / patch_size totally
+        self.patch_embed = PatchEmbedding(patch_size, in_channels, hidden_dim, stride)
+        # total_num_batch = int((60/patch_size)**2) # If 60 could / patch_size totally
+        total_num_batch = 36 
+        hidden_dim =32
         # Althought I use GELU in fact but there is no GELU support in pytorch
         gain = nn.init.calculate_gain('relu')
         def init_(m):
@@ -140,25 +168,29 @@ class MixerBase(nn.Module):
             # self.feature_norm = nn.LayerNorm(obs_dim)
             self.token_norm = nn.LayerNorm(total_num_batch)
             self.channel_norm = nn.LayerNorm(hidden_dim)
-            
+            self.feature_norm = nn.LayerNorm(60*60)
             self.token_mlp = nn.Sequential(
                 init_(nn.Linear(total_num_batch, total_num_batch)),
                 self.token_norm,
-                nn.GELU(),
+                nn.ReLU(inplace= True),
+                nn.Dropout(p=self.dropout_prob)
             )
             self.channel_mlp = nn.Sequential(
                 init_(nn.Linear(hidden_dim, hidden_dim)),
                 self.channel_norm,
-                nn.GELU(),
+                nn.ReLU(inplace= True),
+                nn.Dropout(p=self.dropout_prob)
             )
         else:
             self.token_mlp = nn.Sequential(
                 init_(nn.Linear(total_num_batch, total_num_batch)),
                 nn.GELU(),
+                nn.Dropout(p=self.dropout_prob)
             )
             self.channel_mlp = nn.Sequential(
                 init_(nn.Linear(hidden_dim, hidden_dim)),
                 nn.GELU(),
+                nn.Dropout(p=self.dropout_prob)
             )
         # self.fc_layers = nn.ModuleList([nn.Linear(hidden_dim, hidden_dim) for _ in range(num_layers)])
         self.fc_layers = nn.Linear(hidden_dim*total_num_batch, output_dim)
@@ -166,7 +198,17 @@ class MixerBase(nn.Module):
             
     def forward(self, x):
         self.batch = x.shape[0]
+        original_size = x.size()
+        if self._use_feature_normalization:
+            # print("x.shape",x.shape)
+            # 将 x 分解成 40, -1, 2500
+            x = x.view(self.batch, -1, 60*60)
+            # 对最后一维应用 layer norm
+            x = self.feature_norm(x)
+            # 还原 x 的大小为 40, 7500
+            x = x.view(original_size)
         x = x.view(self.batch, -1, 60, 60)  # Reshape to (batch_size, 4, 50, 50)
+        
         x = self.patch_embed(x)  # Patch embedding
         for i in range(self.transpose_time):
             x = self.token_mlp(x)  # Token mixing

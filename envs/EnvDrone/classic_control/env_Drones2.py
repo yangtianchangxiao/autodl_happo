@@ -20,7 +20,7 @@ sys.path.append(r"/home/cx/happo/envs/EnvDrone/classic_control/")
 sys.path.append(r"d:\code/TRPO-in-MARL\envs\EnvDrone\classic_control/")
 sys.path.append(r"/home/cx/envs/EnvDrone/classic_control/")
 sys.path.append(r"/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/")
-reset_time = 0 # 记录环境测试次数
+reset_time = 236 # 记录环境测试次数
 total_test_map_num = 250 # 表示测试地图的总数
 
 
@@ -594,7 +594,7 @@ class SearchGrid(gym.Env):
         # Set [0.5*i, 0, 0.5*i] for drone locations
         for i in range(self.drone_num):
             drone_pos = tuple(self.drone_list[i].pos)
-            obs[drone_pos] = [0.5 * i, 0, 0.5 * i]
+            obs[drone_pos] = [0.5, 0, 0.5]
 
         return obs
 
@@ -1000,15 +1000,15 @@ class SearchGrid(gym.Env):
             self.drone_list[drone_count].map_processed[0][each_map[2] > 0] = 1
             # 整合智能体自己的位置到最终的地图里
             drone_pos = self.drone_list[drone_count].pos
-            # last_drone_pos = self.drone_list[drone_count].last_pos[0]
-            # last_last_drone_pos = self.drone_list[drone_count].last_pos[1]
-            # if last_last_drone_pos is not None:
-            #     self.drone_list[drone_count].map_processed[0][last_last_drone_pos[0], last_last_drone_pos[1]] = -6.5
-            # if last_drone_pos is not None:
-            #     self.drone_list[drone_count].map_processed[0][last_drone_pos[0], last_drone_pos[1]] = -5.5
+            last_drone_pos = self.drone_list[drone_count].last_pos[0]
+            last_last_drone_pos = self.drone_list[drone_count].last_pos[1]
+            if last_last_drone_pos is not None:
+                self.drone_list[drone_count].map_processed[0][last_last_drone_pos[0], last_last_drone_pos[1]] = -6.5
+            if last_drone_pos is not None:
+                self.drone_list[drone_count].map_processed[0][last_drone_pos[0], last_drone_pos[1]] = -5.5
             self.drone_list[drone_count].map_processed[0][drone_pos[0], drone_pos[1]] = -4.5
-            # self.drone_list[drone_count].last_pos[1] = last_drone_pos
-            # self.drone_list[drone_count].last_pos[0] = drone_pos
+            self.drone_list[drone_count].last_pos[1] = last_drone_pos
+            self.drone_list[drone_count].last_pos[0] = drone_pos
             
             # 整合其他智能体的位置到最终的地图里
             self.drone_list[drone_count].map_processed[0][each_map[3] > 0] = 5.5
@@ -1157,7 +1157,9 @@ class SearchGrid(gym.Env):
             frontier_dir_dynamic_2 = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/frontier_dynamic_2.txt"
             happo_no_cu_collision = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_collision.txt"
             happo_no_cu_no_collision_200 = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_no_collision_200.txt"
-            with open(happo_no_cu_no_collision_200, "a") as w:
+            happo_no_cu_collision_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_collision_dynamic.txt"
+            happo_no_cu_no_collision_200_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_no_collision_200_dynamic.txt"
+            with open(happo_no_cu_no_collision_200_dynamic, "a") as w:
                 w.write("targets_fetched: " + str(self.human_num_copy - self.human_num) + "\n")
                 if self.human_num == 0:
                     w.write("complete: True\n")
@@ -1306,9 +1308,15 @@ class SearchGrid(gym.Env):
         # 一开始不生成目标点，探索范围过了阈值之后再生成
         
         # 静态目标点
-        self.generate_human = True   
-        self.generate_threshold = 1
-        self.human_num = 6
+        # self.generate_human = True   
+        # self.generate_threshold = 1
+        # self.human_num = 6
+        
+        # 动态目标点
+        self.generate_human = False   
+        self.generate_threshold = 0.5
+        self.human_num = 0
+        
         self.human_num_temp = self.human_num
         self.human_num_copy = self.human_num
         self.sensing_threshold = [3, 5]
@@ -1495,7 +1503,7 @@ class SearchGrid(gym.Env):
         for i in range(new_height):
             for j in range(new_width):
                 # Calculate the value of each grid in the new map
-                    downsampled_map[i, j] = np.min(grid_map[i*downsample_factor : min((i+1)*downsample_factor, height), j*downsample_factor : min((j+1)*downsample_factor, width)])
+                    downsampled_map[i, j] = 1 - np.min(grid_map[i*downsample_factor : min((i+1)*downsample_factor, height), j*downsample_factor : min((j+1)*downsample_factor, width)])
 
         print(f'downsampled_map shape:{downsampled_map.shape}!')
         return downsampled_map
@@ -1516,7 +1524,7 @@ class SearchGrid(gym.Env):
         pad_width_x = desired_shape[1] - downsampled_map.shape[1]
 
         # Generate random padding widths for each side
-        np.random.seed(0)  # you can set the seed to make the random numbers reproducible
+        # np.random.seed(0)  # you can set the seed to make the random numbers reproducible
         random_pad_y1 = np.random.randint(0, pad_width_y + 1)
         random_pad_y2 = pad_width_y - random_pad_y1
         random_pad_x1 = np.random.randint(0, pad_width_x + 1)
@@ -1526,7 +1534,7 @@ class SearchGrid(gym.Env):
         pad_width = ((random_pad_y1, random_pad_y2), (random_pad_x1, random_pad_x2))
 
         # Apply the padding
-        expanded_map = np.pad(downsampled_map, pad_width, mode='constant', constant_values=0)
+        expanded_map = np.pad(downsampled_map, pad_width, mode='constant', constant_values=1)
 
         return expanded_map
     

@@ -19,15 +19,22 @@ happo_cu_data_dir = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/data/happo_cu_d
 frontier_dir = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/data/frontier.txt"
 happo_cu_data_dir_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/data/happo_cu_data_dynamic.txt"
 frontier_dir_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/data/frontier_dynamic.txt"
-frontier_dir_dynamic_2 = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/data/frontier_dynamic_2.txt"
+# frontier_dir_dynamic_2 = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/data/frontier_dynamic_2.txt"
 happo_no_cu_collision = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/data/happo_no_cu_collision.txt"
 happo_no_cu_no_collision_200 = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/data/happo_no_cu_no_collision_200.txt"
+happo_no_cu_collision_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/data/happo_no_cu_collision_dynamic.txt"
+happo_no_cu_no_collision_200_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/data/happo_no_cu_no_collision_200_dynamic.txt"
 
 data_happo_cu = load_data_from_file(happo_cu_data_dir)
 data_frontier = load_data_from_file(frontier_dir)
 data_happo_no_cu_no_collision = load_data_from_file(happo_no_cu_no_collision_200)
 data_happo_no_cu_collision = load_data_from_file(happo_no_cu_collision)
 
+
+# data_happo_cu = load_data_from_file(happo_cu_data_dir_dynamic)
+# data_frontier = load_data_from_file(frontier_dir_dynamic)
+# data_happo_no_cu_no_collision = load_data_from_file(happo_no_cu_no_collision_200_dynamic)
+# data_happo_no_cu_collision = load_data_from_file(happo_no_cu_collision_dynamic)
 
 # Extract data for plotting
 targets_fetched_happo_cu = [entry['targets_fetched'] for entry in data_happo_cu]
@@ -54,7 +61,7 @@ bins = np.arange(1, max(
 ) + 2) - 0.5
 
 # Plotting the data
-
+bins = np.arange(0, 8) - 0.5
 # Boxplot data
 fig, axs = plt.subplots(1, 2, figsize=(20, 8))
 
@@ -83,6 +90,8 @@ for i, rate in enumerate([success_rate_happo_cu, success_rate_frontier, success_
 
 # Line plot for the second figure
 x_values = list(range(1, len(bins)))
+
+x_values = list(range(0, 7))
 
 # Plotting the datasets as line plots
 axs[1].plot(x_values, np.histogram(targets_fetched_happo_cu, bins=bins)[0], color=colors[0], marker='o', label='Happo CU')

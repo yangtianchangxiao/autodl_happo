@@ -20,7 +20,7 @@ import numpy as np
 
 np.set_printoptions(threshold=np.inf)
 # from ddpg_cnn import Actor_CNN
-import envs.EnvDrone.classic_control.env_Drones2 as search_grid
+import envs.EnvDrone.classic_control.env_Drones_available as search_grid
 import gym
 from algorithms.actor_critic import Actor as actor
 

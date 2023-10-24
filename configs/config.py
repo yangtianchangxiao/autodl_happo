@@ -163,7 +163,7 @@ def get_config():
     parser.add_argument("--seed", type=int, 
                         default=2, help="Random seed for numpy/torch")
     parser.add_argument("--seed_specify", action="store_false",
-                        default=True, help="Random or specify seed for numpy/torch")
+                        default=False, help="Random or specify seed for numpy/torch")
     parser.add_argument("--running_id", type=int, 
                         default=2, help="the running index of experiment")
     parser.add_argument("--cuda", action='store_false', 
@@ -196,7 +196,8 @@ def get_config():
 
     # network parameters
     parser.add_argument("--nn_type", type=str,
-                        default='mlp', choices=["mlp", "cnn", "mixer"])
+                        default='mlp', choices=["mlp", "cnn", "mixer", 'resnet18', 'attention', 'attention_modified',
+                                                'attention_batchnorm', 'attention_batchnorm_dense', 'attention_batchnorm_modified', 'attention_resnet'])
 
     parser.add_argument("--add_dropout", action='store_true', default=False,
                         help="If True, dropout layers will be added in the mlp model, you can see it in algorithms/utils/mlp")
@@ -230,10 +231,10 @@ def get_config():
 
     # Mixer Layer parameters
     parser.add_argument("--patch_size", type=int, default=5, help="Patch_size")
-    parser.add_argument("--in_channels", type = int, default=3, help="The channel of map")
+    parser.add_argument("--in_channels", type = int, default=4, help="The channel of map")
     parser.add_argument("--hidden_dim", type=int, default = 8, help="embed channel used in Conv network")
     parser.add_argument("--transpose_time", type=int, default=2, help='The time of transpose applied in model')
-
+    parser.add_argument("--stride", type=int, default=1, help="strid data in convo  lution")
     # recurrent parameters
     parser.add_argument("--use_naive_recurrent_policy", action='store_true',
                         default=False, help='Whether to use a naive recurrent policy')
@@ -243,12 +244,19 @@ def get_config():
                         default=1, help="The number of recurrent layers.")
     parser.add_argument("--data_chunk_length", type=int, 
                         default=10, help="Time length of chunks used to train a recurrent_policy")
+    # attention parameters
+    parser.add_argument("--d_model", type=int, default=128, help="The dimension of model")
+    parser.add_argument("--nhead", type=int, default=4, help="The number of heads in the multiheadattention models")
     
     # optimizer parameters
     parser.add_argument("--lr", type=float, 
-                        default=5e-4, help='learning rate (default: 5e-4)')
+                        default=5e-5, help='learning rate (default: 5e-4)')
+    parser.add_argument("--lr_resnet", type=float,
+                        default=5e-5, help='learning rate for resnet (default: 5e-5)')
+    parser.add_argument("--lr_others", type=float,default= 5e-4, help='learning rate for other networks (default: 5e-4)')
+    
     parser.add_argument("--critic_lr", type=float, 
-                        default=5e-4, help='critic learning rate (default: 5e-4)')
+                        default=5e-5, help='critic learning rate (default: 5e-4)')
     parser.add_argument("--opti_eps", type=float, 
                         default=1e-5, help='RMSprop optimizer epsilon (default: 1e-5)')
     parser.add_argument("--weight_decay", type=float, default=0)
