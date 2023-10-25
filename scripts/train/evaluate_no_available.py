@@ -31,7 +31,14 @@ import pickle
 # maddpg = torch.load("/home/lmy/Downloads/episode_9900.pth")
 
 # 在程序的开头清空数据记录
+
 happo_cu_data_dir = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_cu_data.txt"
+happo_cu_data_dir_3_agents = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_cu_data_3_agents.txt"
+happo_cu_data_dir_4_agents = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_cu_data_4_agents.txt"
+happo_cu_data_dir_5_agents = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_cu_data_5_agents.txt"
+
+
+
 frontier_dir = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/frontier.txt"
 happo_cu_data_dir_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_cu_data_dynamic.txt"
 frontier_dir_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/frontier_dynamic.txt"
@@ -40,8 +47,8 @@ happo_no_cu_collision = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_con
 happo_no_cu_no_collision_200 = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_no_collision_200.txt"
 happo_no_cu_collision_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_collision_dynamic.txt"
 happo_no_cu_no_collision_200_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_no_collision_200_dynamic.txt"
-# with open(happo_no_cu_no_collision_200_dynamic, "w") as f:
-#     pass
+with open(happo_cu_data_dir_3_agents, "w") as f:
+    pass
 
 num_episodes = 50000  # 一共运行 200 个 episode
 record_fre = 10000  # 100 个 episode 记录一次
@@ -70,8 +77,11 @@ env = search_grid.SearchGrid(map_set=data, map_num=map_num)
 # 9 for resnet_attention and use rescue reward from beginning
             
 
-path0 = r"/home/ubuntu/autodl_one_layer/mappo_model/happo_57_1/actor_agent0.pt"
-path1 = r"/home/ubuntu/autodl_one_layer/mappo_model/happo_57_1/actor_agent1.pt"
+path0 = r"/home/ubuntu/autodl_one_layer/mappo_model/happo_57_3/actor_agent0.pt"
+path1 = r"/home/ubuntu/autodl_one_layer/mappo_model/happo_57_3/actor_agent1.pt"
+path2 = r"/home/ubuntu/autodl_one_layer/mappo_model/happo_57_3/actor_agent2.pt"
+# path3 = r"/home/ubuntu/autodl_one_layer/mappo_model/happo_57_3/actor_agent3.pt"
+
 # path0 = r"/home/ubuntu/autodl_one_layer/mappo_model/happo_57_8/actor_agent0.pt"
 # path1 = r"/home/ubuntu/autodl_one_layer/mappo_model/happo_57_8/actor_agent1.pt"
 prev_layer_norm_weight = None
@@ -79,6 +89,8 @@ prev_layer_norm_bias = None
 
 checkpoint0 = torch.load(path0, map_location=torch.device('cpu'))
 checkpoint1 = torch.load(path1, map_location=torch.device('cpu'))
+checkpoint2 = torch.load(path2, map_location=torch.device('cpu'))
+# checkpoint3 = torch.load(path3, map_location=torch.device('cpu'))
 # checkpoint = torch.load('D:/code/rl_local/RL-in-multi-robot-foraging/marl/mappo_model/cnn_ICMrun_02/actor.pt', map_location=torch.device('cpu'))
 # checkpoint = torch.load('/home/lmy/ArcLab/Projects/multi-robot_foraging/MADDPG/models/old_model/episode_2999.pth')
 # actor_1 = light_mappo.algorithms.algorithm.r_actor_critic().eval()
@@ -100,23 +112,22 @@ torch.manual_seed(1)
 torch.cuda.manual_seed_all(1)
 np.random.seed(1)
 actor_1 = actor(all_args, env.observation_space, env.action_space)
-#
-# print("Actor state_dict keys:")
-# for key in actor_1.state_dict().keys():
-#     print(key)
-#
-# print("\nCheckpoint state_dict keys:")
-# for key in checkpoint0.keys():
-#     print(key)
-
 actor_1.load_state_dict(checkpoint0)
 actor_1 = actor_1.eval()
-actor_2 = actor(all_args, env.observation_space, env.action_space)
 
+actor_2 = actor(all_args, env.observation_space, env.action_space)
 actor_2.load_state_dict(checkpoint1)
 actor_2 = actor_2.eval()
 
-agents = [actor_1, actor_2]
+actor3 = actor(all_args, env.observation_space, env.action_space)
+actor3.load_state_dict(checkpoint2)
+actor3 = actor3.eval()
+
+# actor_4 = actor(all_args, env.observation_space, env.action_space)
+# actor_4.load_state_dict(checkpoint3)
+# actor_4 = actor_4.eval()
+
+agents = [actor_1, actor_2, actor3]
 # agents = [actor_2, actor_1]
 # indices = np.arange(env.num_agents)
 # acotr = [actor[i] for i in indices]
@@ -208,11 +219,11 @@ def generate_path(env, id):
 
 
 def get_action(obs, robot_pos):   #将状态输入模型得到动作
-    available_actions = np.ones((2,4))
-    obs = obs.reshape(2,60,60)
+    available_actions = np.ones((env.drone_num,4))
+    obs = obs.reshape(env.drone_num,60,60)
     directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # 上、下、左、右
     # self.get_logger().info(f'robot_pos[0]: {robot_pos[0]}')
-    for i in range(2):  # 对于两个机器人
+    for i in range(env.drone_num):  # 对于两个机器人
         for j, (dx, dy) in enumerate(directions):  # 对于每个方向
             if obs[i][robot_pos[i][0] + dx, robot_pos[i][1] + dy] in [1, 5.5, -4.5]:
                 available_actions[i, j] = 0
@@ -259,7 +270,7 @@ device = torch.device("cpu")
 
 single_map, _, _, _ = env.state_action_reward_done(None)
 num_class = 4
-mask = np.ones((2,1))
+mask = np.ones((env.drone_num,1))
 rnn_state = np.zeros((1,4,512))
 last_grid_agents = np.zeros(env.drone_num)
 agent_repetition = np.zeros(env.drone_num)
@@ -271,7 +282,7 @@ for i in range(env.drone_num):
     resuce_action_list.append(rescue_action(actions=[], id=i))
     grid_agents.append(0)
 
-action = np.empty(2)
+action = np.empty(env.drone_num)
 
 
                 
@@ -281,10 +292,10 @@ for i_episode in range(1, num_episodes):
     obs = np.array(obs)
     # print("obs shape",obs.shape)
     robot_pos = [env.drone_list[i].pos for i in range(env.drone_num)] # 两个机器人的位置
-    # available_actions = get_action(obs, robot_pos)
+    available_actions = get_action(obs, robot_pos)
     # print(available_actions)
     for i, agent in enumerate(agents):
-        action[i], _, _,_= agent(np.expand_dims(obs[i], axis=0), rnn_state, mask[i], available_actions =  None) # 每个智能体采用自己的状态做动作
+        action[i], _, _,_= agent(np.expand_dims(obs[i], axis=0), rnn_state, mask[i], available_actions =  np.expand_dims(available_actions[i, :], axis=0)) # 每个智能体采用自己的状态做动作
     # print("pre - action is", action)
     action = action.astype(int)
     one_hot_action = action.reshape(-1,1)
@@ -329,7 +340,7 @@ for i_episode in range(1, num_episodes):
         for i, drone in enumerate(env.drone_list):
             ax4_image[drone.pos[0], drone.pos[1]] = [0 , 0.25 *i, 0] 
 
-        # print(done, ' is done!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11')
+        # print(done, ' is done!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!3')
 
     ax1.cla()
     ax2.cla()
@@ -357,33 +368,35 @@ for i_episode in range(1, num_episodes):
             ax4_image[drone.pos[0], drone.pos[1]] = [0 , 1, 0]
         elif i ==1:
             ax4_image[drone.pos[0], drone.pos[1]] = [0 , 0, 1]
-      
-    # 画图
-    # 找到 ax1_image 中所有 human 的元素的索引: [1, 0, 0]
-    indices = np.where(np.all(ax1_image == [1, 0, 0], axis=-1))
-    # print("indices is ", indices)
-    ax3_image_copy = ax3_image.copy()
-    ax3_image_copy[indices] = [1, 0, 0]
-    
-    ax1.imshow(ax1_image)
-    ax2.imshow(ax2_image)
-    ax3.imshow(ax3_image_copy)
-    ax3.axis('off')
-    ax4.imshow(ax4_image)
-    plt.pause(.2)
-    plt.draw()
-    
+            
+    draw = False
+    if draw is True:  
+        # 画图
+        # 找到 ax1_image 中所有 human 的元素的索引: [1, 0, 0]
+        indices = np.where(np.all(ax1_image == [1, 0, 0], axis=-1))
+        # print("indices is ", indices)
+        ax3_image_copy = ax3_image.copy()
+        ax3_image_copy[indices] = [1, 0, 0]
+        
+        ax1.imshow(ax1_image)
+        ax2.imshow(ax2_image)
+        ax3.imshow(ax3_image_copy)
+        ax3.axis('off')
+        ax4.imshow(ax4_image)
+        plt.pause(.2)
+        plt.draw()
+        
 
 
-    ax3_copy.imshow(ax3_image_copy)  # 这在新的 axes 对象上显示 ax3_image_copy
-    ax3_copy.axis('off')  # 这在新的 axes 对象上关闭了坐标轴
+        ax3_copy.imshow(ax3_image_copy)  # 这在新的 axes 对象上显示 ax3_image_copy
+        ax3_copy.axis('off')  # 这在新的 axes 对象上关闭了坐标轴
 
-    plt.draw()  # 这会更新图像显示
+        plt.draw()  # 这会更新图像显示
 
-    # while True:
-    #     user_input = input("请按 '空格' 或 'a' 键继续...")
-    #     if user_input in [' ', 'a']:
-    #         break
+        # while True:
+        #     user_input = input("请按 '空格' 或 'a' 键继续...")
+        #     if user_input in [' ', 'a']:
+        #         break
 
 
 

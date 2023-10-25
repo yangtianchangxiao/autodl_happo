@@ -1,0 +1,72 @@
+targets_fetched: 6
+complete: True
+total_time: 76
+
+targets_fetched: 6
+complete: True
+total_time: 84
+
+targets_fetched: 6
+complete: True
+total_time: 123
+
+targets_fetched: 6
+complete: True
+total_time: 163
+
+targets_fetched: 6
+complete: True
+total_time: 240
+
+targets_fetched: 6
+complete: True
+total_time: 117
+
+targets_fetched: 6
+complete: True
+total_time: 129
+
+targets_fetched: 6
+complete: True
+total_time: 170
+
+targets_fetched: 6
+complete: True
+total_time: 217
+
+targets_fetched: 6
+complete: True
+total_time: 230
+
+targets_fetched: 6
+complete: True
+total_time: 139
+
+targets_fetched: 6
+complete: True
+total_time: 159
+
+targets_fetched: 6
+complete: True
+total_time: 178
+
+targets_fetched: 6
+complete: True
+total_time: 60
+
+targets_fetched: 6
+complete: True
+total_time: 119
+
+targets_fetched: 6
+complete: True
+total_time: 137
+
+targets_fetched: 6
+complete: True
+total_time: 199
+
+targets_fetched: 6
+complete: True
+total_time: 177
+

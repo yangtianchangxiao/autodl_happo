@@ -20,7 +20,7 @@ sys.path.append(r"/home/cx/happo/envs/EnvDrone/classic_control/")
 sys.path.append(r"d:\code/TRPO-in-MARL\envs\EnvDrone\classic_control/")
 sys.path.append(r"/home/cx/envs/EnvDrone/classic_control/")
 sys.path.append(r"/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/")
-reset_time = 236 # 记录环境测试次数
+reset_time = 0 # 记录环境测试次数
 total_test_map_num = 250 # 表示测试地图的总数
 
 
@@ -1151,6 +1151,12 @@ class SearchGrid(gym.Env):
 
 
             happo_cu_data_dir = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_cu_data.txt"
+            happo_cu_data_dir_3_agents = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_cu_data_3_agents.txt"
+            happo_cu_data_dir_4_agents = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_cu_data_4_agents.txt"
+            happo_cu_data_dir_5_agents = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_cu_data_5_agents.txt"
+
+
+
             frontier_dir = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/frontier.txt"
             happo_cu_data_dir_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_cu_data_dynamic.txt"
             frontier_dir_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/frontier_dynamic.txt"
@@ -1159,7 +1165,7 @@ class SearchGrid(gym.Env):
             happo_no_cu_no_collision_200 = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_no_collision_200.txt"
             happo_no_cu_collision_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_collision_dynamic.txt"
             happo_no_cu_no_collision_200_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_no_collision_200_dynamic.txt"
-            with open(happo_no_cu_no_collision_200_dynamic, "a") as w:
+            with open(happo_cu_data_dir_3_agents, "a") as w:
                 w.write("targets_fetched: " + str(self.human_num_copy - self.human_num) + "\n")
                 if self.human_num == 0:
                     w.write("complete: True\n")
@@ -1267,7 +1273,7 @@ class SearchGrid(gym.Env):
         self.collision_threshold = 2
         self.offsets = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # 上下左右四个方向的偏移
         self.map_size = 60
-        self.drone_num = 2
+        self.drone_num = 3
         # Rescue paragrams
         # 已探索区域的比例
         self.exploration_prop = 0
@@ -1291,7 +1297,7 @@ class SearchGrid(gym.Env):
         self.last_grid_agents = np.zeros(self.drone_num)
         self.agent_repetition = np.zeros(self.drone_num)
         self.agent_repetition_reward = np.zeros(self.drone_num)
-        self.repetition_threshold = 14 # 基础款MIXER里用的是5
+        self.repetition_threshold = 5 # 基础款MIXER里用的是5
         self.repetition_threshold_for_reward = 1000
         self.rescue_flag = False
         # The area explored by each agent each step
