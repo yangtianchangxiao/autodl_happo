@@ -1165,7 +1165,7 @@ class SearchGrid(gym.Env):
             happo_no_cu_no_collision_200 = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_no_collision_200.txt"
             happo_no_cu_collision_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_collision_dynamic.txt"
             happo_no_cu_no_collision_200_dynamic = "/home/ubuntu/autodl_one_layer/envs/EnvDrone/classic_control/happo_no_cu_no_collision_200_dynamic.txt"
-            with open(happo_cu_data_dir_3_agents, "a") as w:
+            with open(happo_cu_data_dir_5_agents, "a") as w:
                 w.write("targets_fetched: " + str(self.human_num_copy - self.human_num) + "\n")
                 if self.human_num == 0:
                     w.write("complete: True\n")
@@ -1273,7 +1273,7 @@ class SearchGrid(gym.Env):
         self.collision_threshold = 2
         self.offsets = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # 上下左右四个方向的偏移
         self.map_size = 60
-        self.drone_num = 3
+        self.drone_num = 5
         # Rescue paragrams
         # 已探索区域的比例
         self.exploration_prop = 0
